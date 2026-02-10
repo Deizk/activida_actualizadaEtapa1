@@ -1,0 +1,8 @@
+{
+  "name": "Web Prototipo Comuna Banco Obrero Inteligente",
+  "description": "Plataforma integral de gestión comunal para reporte de incidencias, votaciones democráticas, marketplace local y gobernanza de datos con IA.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}
