@@ -5,7 +5,7 @@ import { ReportForm } from './views/ReportForm';
 import { Voting } from './views/Voting';
 import { VotingHistory } from './views/VotingHistory';
 import { Marketplace } from './views/Marketplace';
-import { CartView } from './views/CartView';
+import { MyBusiness } from './views/MyBusiness'; // New Import
 import { P2PCheckout } from './views/P2PCheckout';
 import { WebDashboard } from './views/WebDashboard';
 import { Auth } from './views/Auth';
@@ -18,10 +18,10 @@ import { ImpactView } from './views/ImpactView';
 import { VolunteerTasks } from './views/VolunteerTasks';
 import { UserProfile } from './views/UserProfile';
 import { CensusView } from './views/CensusView';
-import { MinorProfilesView } from './views/MinorProfilesView'; // Import New View
+import { MinorProfilesView } from './views/MinorProfilesView';
 import { ThemeProvider } from './ThemeContext';
-import { CartItem, Product, VoteRecord, Proposal, UserProfileData } from './types';
-import { MOCK_VOTE_HISTORY } from './constants';
+import { CartItem, Product, VoteRecord, Proposal, UserProfileData, MinorProfile } from './types';
+import { MOCK_VOTE_HISTORY, MOCK_PROPOSALS } from './constants';
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,8 +35,13 @@ function AppContent() {
   // Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
   
-  // Voting History State
+  // Voting State (Lifted for persistence)
+  const [proposals, setProposals] = useState<Proposal[]>(MOCK_PROPOSALS);
+  const [userVotes, setUserVotes] = useState<Record<string, 'for' | 'against'>>({});
   const [voteHistory, setVoteHistory] = useState<VoteRecord[]>(MOCK_VOTE_HISTORY);
+
+  // Emergency State
+  const [emergencyMinor, setEmergencyMinor] = useState<MinorProfile | null>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -59,6 +64,16 @@ function AppContent() {
       setPreviousTab(activeTab);
       setSelectedPublicProfile(profile);
       setActiveTab('public_profile');
+  };
+
+  // Emergency Navigation
+  const handleTriggerEmergency = (minor?: MinorProfile) => {
+      if (minor) {
+          setEmergencyMinor(minor);
+      } else {
+          setEmergencyMinor(null);
+      }
+      setActiveTab('emergency');
   };
 
   // Cart Functions
@@ -88,6 +103,7 @@ function AppContent() {
 
   // Voting Function
   const handleVoteSubmit = (proposal: Proposal, vote: 'for' | 'against', justification: string) => {
+    // 1. Update History
     const newRecord: VoteRecord = {
       id: `V-${Date.now()}`,
       proposalId: proposal.id,
@@ -97,10 +113,25 @@ function AppContent() {
       justification: justification,
       timestamp: new Date().toISOString().split('T')[0]
     };
-    
     setVoteHistory(prev => [newRecord, ...prev]);
-    // In a real app, this would also update the active proposals list to remove the voted one or mark it as voted.
-    setActiveTab('voting_history'); // Auto redirect to history to see the result
+
+    // 2. Update Proposal Counts (Real-time feedback)
+    setProposals(prev => prev.map(p => {
+        if (p.id === proposal.id) {
+             return {
+                ...p,
+                votesFor: vote === 'for' ? p.votesFor + 1 : p.votesFor,
+                votesAgainst: vote === 'against' ? p.votesAgainst + 1 : p.votesAgainst
+             };
+        }
+        return p;
+    }));
+
+    // 3. Mark as voted locally (Persistence)
+    setUserVotes(prev => ({
+        ...prev,
+        [proposal.id]: vote
+    }));
   };
 
   const renderContent = () => {
@@ -115,7 +146,7 @@ function AppContent() {
       case 'report':
         return <ReportForm />;
       case 'emergency':
-        return <EmergencyMode />;
+        return <EmergencyMode linkedMinor={emergencyMinor} />;
 
       // Bienestar Social
       case 'health':
@@ -131,20 +162,26 @@ function AppContent() {
 
       // Mercado
       case 'market_home':
-        return <Marketplace onAddToCart={addToCart} onViewProfile={handleViewProfile} />;
-      case 'cart':
-        return <CartView 
-            items={cart} 
-            onUpdateQuantity={updateQuantity} 
-            onRemove={removeFromCart} 
-            onCheckout={() => setActiveTab('p2p_checkout')} 
+        return <Marketplace 
+            onAddToCart={addToCart} 
+            onViewProfile={handleViewProfile}
+            cartItems={cart}
+            onUpdateQuantity={updateQuantity}
+            onRemoveFromCart={removeFromCart}
+            onCheckout={() => setActiveTab('p2p_checkout')}
         />;
+      case 'my_business':
+        return <MyBusiness />;
       case 'p2p_checkout':
         return <P2PCheckout items={cart} onFinish={() => { setCart([]); setActiveTab('home'); }} />;
 
       // Democracia
       case 'voting_active':
-        return <Voting onVoteSubmit={handleVoteSubmit} />;
+        return <Voting 
+            proposals={proposals} 
+            userVotes={userVotes} 
+            onVoteSubmit={handleVoteSubmit} 
+        />;
       case 'voting_history':
         return <VotingHistory history={voteHistory} />;
 
@@ -156,7 +193,7 @@ function AppContent() {
       case 'profile':
         return <UserProfile />;
       case 'minors': // New Route
-        return <MinorProfilesView />;
+        return <MinorProfilesView onEmergency={handleTriggerEmergency} />;
       case 'public_profile':
         return <UserProfile user={selectedPublicProfile} onBack={() => setActiveTab(previousTab)} />;
       case 'census':
@@ -187,19 +224,6 @@ function AppContent() {
     </Layout>
   );
 }
-
-// Simple placeholder for views not yet fully implemented in the prototype
-const PlaceholderView = ({ title, icon }: { title: string, icon: string }) => (
-  <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 font-bold">
-    <div className="text-center">
-      <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-        <span className="material-symbols-outlined text-4xl">{icon}</span>
-      </div>
-      <p className="text-xl text-slate-600 dark:text-slate-300">{title}</p>
-      <p className="text-sm font-normal mt-2 opacity-70">Próximamente en la Beta</p>
-    </div>
-  </div>
-);
 
 export default function App() {
   return (

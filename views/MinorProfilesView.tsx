@@ -2,23 +2,83 @@ import React, { useState } from 'react';
 import { MOCK_MINORS, MOCK_USER_PROFILE } from '../constants';
 import { MinorProfile } from '../types';
 
-export const MinorProfilesView: React.FC = () => {
+interface MinorProfilesViewProps {
+  onEmergency?: (minor: MinorProfile) => void;
+}
+
+export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergency }) => {
   const [minors, setMinors] = useState<MinorProfile[]>(MOCK_MINORS);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   
+  // Editing State
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   // Form State
   const [newName, setNewName] = useState('');
   const [newDob, setNewDob] = useState('');
+  const [newCedula, setNewCedula] = useState('');
+  const [newPhone, setNewPhone] = useState('');
   const [hasCertificate, setHasCertificate] = useState(false);
   
   // Medical State in Form
   const [hasCondition, setHasCondition] = useState(false);
-  const [conditionName, setConditionName] = useState('');
+  const [conditionInput, setConditionInput] = useState('');
+  const [conditionsList, setConditionsList] = useState<string[]>([]);
   const [isDisability, setIsDisability] = useState(false);
 
-  const handleAddMinor = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setNewName('');
+    setNewDob('');
+    setNewCedula('');
+    setNewPhone('');
+    setHasCertificate(false);
+    setHasCondition(false);
+    setConditionInput('');
+    setConditionsList([]);
+    setIsDisability(false);
+    setEditingId(null);
+  };
+
+  const handleOpenAdd = () => {
+      resetForm();
+      setShowForm(true);
+  };
+
+  const handleOpenEdit = (minor: MinorProfile) => {
+      setEditingId(minor.id);
+      setNewName(minor.name);
+      setNewDob(minor.dateOfBirth);
+      setNewCedula(minor.cedula || '');
+      setNewPhone(minor.phone || '');
+      // Mock check for certificate if editing (assuming existing are verified)
+      setHasCertificate(minor.birthCertificateVerified);
+      
+      const hasConds = minor.conditions.length > 0;
+      setHasCondition(hasConds);
+      setConditionsList(minor.conditions);
+      setConditionInput('');
+      setIsDisability(minor.disability);
+      
+      setShowForm(true);
+  };
+
+  const handleAddCondition = (e?: React.MouseEvent | React.KeyboardEvent) => {
+    if (e) e.preventDefault();
+    if (conditionInput.trim()) {
+        if (!conditionsList.includes(conditionInput.trim())) {
+            setConditionsList([...conditionsList, conditionInput.trim()]);
+        }
+        setConditionInput('');
+    }
+  };
+
+  const handleRemoveCondition = (conditionToRemove: string) => {
+      setConditionsList(conditionsList.filter(c => c !== conditionToRemove));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newDob || !hasCertificate) return;
+    if (!newName || !newDob || !newCedula || !newPhone || !hasCertificate) return;
 
     // Calc Age Mock
     const birthDate = new Date(newDob);
@@ -26,22 +86,26 @@ export const MinorProfilesView: React.FC = () => {
     const ageDate = new Date(ageDiff); 
     const calculatedAge = Math.abs(ageDate.getUTCFullYear() - 1970);
 
-    // Simulate generating a Central Medical ID based on Guardian's Cedula
-    // In a real app, this would come from the backend after linking
-    const medicalRecordId = hasCondition 
+    // Final conditions logic
+    const finalConditions = hasCondition ? conditionsList : [];
+
+    // Medical ID logic
+    const medicalRecordId = finalConditions.length > 0
         ? `MED-${MOCK_USER_PROFILE.cedula.split('-')[1].substring(0,4)}-${Date.now().toString().substring(9)}`
         : undefined;
 
-    const newProfile: MinorProfile = {
-        id: `M-${Date.now()}`,
+    const profileData: MinorProfile = {
+        id: editingId || `M-${Date.now()}`,
         guardianId: "1",
         name: newName,
         dateOfBirth: newDob,
         age: calculatedAge,
+        cedula: newCedula,
+        phone: newPhone,
         gender: "F", // Default for mock
         bloodType: "O+",
         allergies: [],
-        conditions: hasCondition && conditionName ? [conditionName] : [],
+        conditions: finalConditions,
         disability: isDisability,
         medicalRecordId: medicalRecordId,
         birthCertificateVerified: true,
@@ -52,27 +116,28 @@ export const MinorProfilesView: React.FC = () => {
         }
     };
     
-    // Simulate API Call for Linkage
-    if (hasCondition) {
-        alert(`✅ Sincronización Exitosa\n\nLa condición "${conditionName}" ha sido vinculada al Historial Médico Familiar Centralizado bajo el ID: ${medicalRecordId}.`);
+    if (editingId) {
+        // Update existing
+        setMinors(prev => prev.map(m => m.id === editingId ? profileData : m));
+        alert("Perfil actualizado correctamente.");
+    } else {
+        // Create new
+        setMinors([...minors, profileData]);
+        if (finalConditions.length > 0) {
+            alert(`✅ Sincronización Exitosa\n\nLas condiciones médicas han sido vinculadas al Historial Médico Familiar Centralizado.`);
+        }
     }
 
-    setMinors([...minors, newProfile]);
-    setShowAddForm(false);
+    setShowForm(false);
     resetForm();
   };
 
-  const resetForm = () => {
-    setNewName('');
-    setNewDob('');
-    setHasCertificate(false);
-    setHasCondition(false);
-    setConditionName('');
-    setIsDisability(false);
-  };
-
   const handleSOS = (minor: MinorProfile) => {
-      alert(`🚨 ALERTA SOS ACTIVADA PARA: ${minor.name}\n\nEnviando ficha médica (${minor.medicalRecordId || 'Sin Registro Central'}) y ubicación a servicios de emergencia.`);
+      if (onEmergency) {
+          onEmergency(minor);
+      } else {
+          alert(`🚨 ALERTA SOS ACTIVADA PARA: ${minor.name}`);
+      }
   };
 
   const migrateProfile = (id: string) => {
@@ -95,7 +160,7 @@ export const MinorProfilesView: React.FC = () => {
                 </div>
              </div>
              <button 
-                onClick={() => setShowAddForm(true)}
+                onClick={handleOpenAdd}
                 className="bg-brand-blue hover:bg-sky-600 text-white px-3 py-2 rounded-lg shadow-sm transition-colors text-sm font-bold flex items-center gap-2"
              >
                 <span className="material-symbols-outlined text-lg">add</span>
@@ -106,17 +171,17 @@ export const MinorProfilesView: React.FC = () => {
 
       <div className="flex-1 overflow-auto p-4 md:p-6">
 
-        {/* Add Form Modal Overlay */}
-        {showAddForm && (
+        {/* Add/Edit Form Modal Overlay */}
+        {showForm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in-up">
                 <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
                     <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-800 z-10">
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">Nuevo Perfil de Menor</h3>
-                        <button onClick={() => setShowAddForm(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700">
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">{editingId ? 'Editar Perfil' : 'Nuevo Perfil de Menor'}</h3>
+                        <button onClick={() => setShowForm(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700">
                             <span className="material-symbols-outlined">close</span>
                         </button>
                     </div>
-                    <form onSubmit={handleAddMinor} className="p-6 space-y-4">
+                    <form onSubmit={handleSubmit} className="p-6 space-y-4">
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex items-start gap-3 text-sm text-blue-800 dark:text-blue-300 mb-4">
                             <span className="material-symbols-outlined text-lg mt-0.5">info</span>
                             <p>Este perfil estará vinculado a tu cuenta (Tutor: {MOCK_USER_PROFILE.name}).</p>
@@ -135,7 +200,19 @@ export const MinorProfilesView: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="col-span-2">
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Cédula de Identidad</label>
+                                <input 
+                                    type="text" 
+                                    value={newCedula}
+                                    onChange={e => setNewCedula(e.target.value)}
+                                    className="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none text-slate-800 dark:text-white"
+                                    placeholder="V-12.345.678"
+                                    required
+                                />
+                            </div>
+
+                             <div className="col-span-2 md:col-span-1">
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Fecha de Nacimiento</label>
                                 <input 
                                     type="date" 
@@ -144,6 +221,19 @@ export const MinorProfilesView: React.FC = () => {
                                     className="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none text-slate-800 dark:text-white"
                                     required
                                 />
+                            </div>
+
+                             <div className="col-span-2">
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Número de Teléfono</label>
+                                <input 
+                                    type="tel" 
+                                    value={newPhone}
+                                    onChange={e => setNewPhone(e.target.value)}
+                                    className="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none text-slate-800 dark:text-white"
+                                    placeholder="0412-5555555"
+                                    required
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1">Si no posee, usar teléfono del representante.</p>
                             </div>
                         </div>
 
@@ -163,23 +253,50 @@ export const MinorProfilesView: React.FC = () => {
                             {hasCondition && (
                                 <div className="mt-3 pl-4 border-l-2 border-brand-blue space-y-3 animate-fade-in-down">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Nombre de la Condición / Enfermedad</label>
-                                        <input 
-                                            type="text" 
-                                            value={conditionName}
-                                            onChange={e => setConditionName(e.target.value)}
-                                            className="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none text-slate-800 dark:text-white"
-                                            placeholder="Ej. Asma, Diabetes Tipo 1..."
-                                        />
+                                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Añadir Condiciones / Enfermedades</label>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                value={conditionInput}
+                                                onChange={e => setConditionInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleAddCondition(e)}
+                                                className="flex-1 p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none text-slate-800 dark:text-white"
+                                                placeholder="Ej. Asma, Diabetes..."
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={handleAddCondition}
+                                                className="bg-brand-blue hover:bg-sky-600 text-white p-3 rounded-xl transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined">add</span>
+                                            </button>
+                                        </div>
+                                        {/* Conditions List */}
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {conditionsList.length > 0 ? conditionsList.map((cond, idx) => (
+                                                <span key={idx} className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-bold border border-blue-100 dark:border-blue-900/30 flex items-center gap-1 animate-fade-in-up">
+                                                    {cond}
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => handleRemoveCondition(cond)}
+                                                        className="hover:text-red-500 transition-colors ml-1"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">close</span>
+                                                    </button>
+                                                </span>
+                                            )) : (
+                                                <span className="text-xs text-slate-400 italic py-1">Sin condiciones agregadas</span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <label className="flex items-center gap-2 cursor-pointer">
+                                    <label className="flex items-center gap-2 cursor-pointer mt-2">
                                         <input 
                                             type="checkbox" 
                                             checked={isDisability} 
                                             onChange={e => setIsDisability(e.target.checked)}
                                             className="rounded text-brand-blue focus:ring-brand-blue"
                                         />
-                                        <span className="text-sm text-slate-700 dark:text-slate-300">Es una discapacidad certificada</span>
+                                        <span className="text-sm text-slate-700 dark:text-slate-300">Alguna condición certifica discapacidad</span>
                                     </label>
                                     <p className="text-[10px] text-brand-blue dark:text-sky-400 flex items-center gap-1">
                                         <span className="material-symbols-outlined text-xs">cloud_sync</span>
@@ -211,7 +328,7 @@ export const MinorProfilesView: React.FC = () => {
                             disabled={!hasCertificate}
                             className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all ${hasCertificate ? 'bg-brand-blue hover:bg-sky-600' : 'bg-slate-400 cursor-not-allowed'}`}
                         >
-                            Crear Perfil y Vincular
+                            {editingId ? 'Guardar Cambios' : 'Crear Perfil y Vincular'}
                         </button>
                     </form>
                 </div>
@@ -236,7 +353,23 @@ export const MinorProfilesView: React.FC = () => {
                                         <span className="material-symbols-outlined text-brand-blue text-lg" title="Documento Verificado">verified_user</span>
                                     )}
                                 </div>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{minor.age} años • {minor.gender === 'F' ? 'Niña' : 'Niño'}</p>
+                                <div className="flex flex-wrap gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                    <span>{minor.age} años</span>
+                                    <span>•</span>
+                                    <span>{minor.gender === 'F' ? 'Niña' : 'Niño'}</span>
+                                    {minor.cedula && (
+                                        <>
+                                            <span>•</span>
+                                            <span className="font-mono">{minor.cedula}</span>
+                                        </>
+                                    )}
+                                </div>
+                                {minor.phone && (
+                                    <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm">smartphone</span>
+                                        {minor.phone}
+                                    </p>
+                                )}
                                 
                                 {/* Central Registry Badge */}
                                 {minor.medicalRecordId && (
@@ -302,7 +435,10 @@ export const MinorProfilesView: React.FC = () => {
                                     Reportar SOS
                                 </button>
                             )}
-                            <button className="px-4 border border-gray-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition-colors">
+                            <button 
+                                onClick={() => handleOpenEdit(minor)}
+                                className="px-4 border border-gray-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                            >
                                 <span className="material-symbols-outlined text-lg">edit_note</span>
                             </button>
                         </div>
@@ -317,7 +453,7 @@ export const MinorProfilesView: React.FC = () => {
                 <p className="text-lg font-bold text-slate-600 dark:text-slate-300">No hay menores registrados</p>
                 <p className="text-sm max-w-xs mx-auto mb-6">Vincula a tus hijos o representados para gestionar su salud y seguridad.</p>
                 <button 
-                    onClick={() => setShowAddForm(true)}
+                    onClick={handleOpenAdd}
                     className="text-brand-blue dark:text-sky-400 font-bold hover:underline"
                 >
                     Registrar el primero ahora

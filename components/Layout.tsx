@@ -43,8 +43,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     {
       title: 'Mercado',
       items: [
-        { id: 'market_home', icon: 'storefront', label: 'Mercado' },
-        { id: 'cart', icon: 'shopping_cart', label: 'Carrito', badge: cartItemCount > 0 ? cartItemCount : undefined },
+        { id: 'market_home', icon: 'storefront', label: 'Mercado & Carrito', badge: cartItemCount > 0 ? cartItemCount : undefined },
+        { id: 'my_business', icon: 'store', label: 'Mi Negocio' },
       ]
     },
     {
@@ -75,9 +75,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   // Simplified Bottom Nav for Mobile
   const mobileNavItems = [
     { id: 'home', icon: 'home', label: 'Inicio' },
-    { id: 'voting_active', icon: 'how_to_vote', label: 'Votar' },
-    { id: 'report', icon: 'add_circle', label: 'Reportar', isFab: true },
     { id: 'market_home', icon: 'storefront', label: 'Mercado' },
+    { id: 'report', icon: 'add_circle', label: 'Reportar', isFab: true },
+    { id: 'my_business', icon: 'store', label: 'Negocio' },
     { id: 'menu_trigger', icon: 'grid_view', label: 'Menú', action: () => setIsMobileMenuOpen(true) },
   ];
 

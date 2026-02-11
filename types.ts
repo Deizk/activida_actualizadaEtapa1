@@ -1,3 +1,4 @@
+
 export enum UserRole {
   CITIZEN = 'citizen',
   LEADER = 'leader',
@@ -57,7 +58,9 @@ export interface VoteRecord {
 export interface Product {
   id: string;
   name: string;
+  description?: string; // Added description
   price: number;
+  stock: number; // Added stock management
   allowsBarter: boolean;
   seller: string;
   storeId: string; // Link to store
@@ -87,6 +90,9 @@ export interface UserProfileData {
 export interface Store {
   id: string;
   name: string;
+  description: string; // Entrepreneurship description
+  location: string; // Physical location
+  paymentMethods: string[]; // Accepted payment methods
   owner: string; // Deprecated in UI but kept for ID ref
   ownerProfile: UserProfileData; // Full profile linkage
   category: string;
@@ -96,6 +102,16 @@ export interface Store {
 
 export interface CartItem extends Product {
   quantity: number;
+}
+
+export interface Order {
+  id: string;
+  buyerName: string;
+  items: { name: string; qty: number; price: number }[];
+  total: number;
+  status: 'pending_payment' | 'paid' | 'delivered' | 'cancelled';
+  date: string;
+  paymentMethod?: string;
 }
 
 export interface KPI {
@@ -207,6 +223,8 @@ export interface MinorProfile {
   name: string;
   dateOfBirth: string;
   age: number;
+  cedula?: string; // New field
+  phone?: string; // New field
   gender: 'M' | 'F';
   bloodType: string;
   allergies: string[];

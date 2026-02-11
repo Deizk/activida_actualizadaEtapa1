@@ -1,3 +1,4 @@
+
 import { BulletinItem, HighlightItem, Incident, IncidentPriority, IncidentStatus, KPI, Product, Proposal, ServiceStatusItem, Store, VoteRecord, VolunteerTask, UserProfileData, CensusData, AppNotification, MinorProfile } from "./types";
 
 export const MOCK_KPIS: KPI[] = [
@@ -102,7 +103,10 @@ export const MOCK_VOTE_HISTORY: VoteRecord[] = [
 export const MOCK_STORES: Store[] = [
   { 
     id: 'S1', 
-    name: 'Cooperativa La Abeja', 
+    name: 'Cooperativa La Abeja',
+    description: "Producción y venta de miel 100% pura y productos derivados de la colmena. Apoyamos la apicultura sostenible.",
+    location: "Calle 3, Casa #12",
+    paymentMethods: ["Pago Móvil", "Efectivo", "Divisas"],
     owner: 'Juana Pérez', 
     category: 'Alimentos', 
     rating: 4.8, 
@@ -124,6 +128,9 @@ export const MOCK_STORES: Store[] = [
   { 
     id: 'S2', 
     name: 'TecnoServicios', 
+    description: "Servicio técnico especializado en celulares, laptops y computadoras. Venta de accesorios y repuestos.",
+    location: "Local 5, Centro Comunal",
+    paymentMethods: ["Pago Móvil", "Zelle", "Binance", "Efectivo"],
     owner: 'Carlos Ruiz', 
     category: 'Tecnología', 
     rating: 4.5, 
@@ -145,6 +152,9 @@ export const MOCK_STORES: Store[] = [
   { 
     id: 'S3', 
     name: 'Panadería Comunal', 
+    description: "Pan fresco todos los días a precios solidarios. Proyecto socioproductivo del Consejo Comunal.",
+    location: "Plaza Central, al lado del módulo",
+    paymentMethods: ["Punto de Venta", "Efectivo", "Pago Móvil"],
     owner: 'Consejo Comunal', 
     category: 'Alimentos', 
     rating: 4.9, 
@@ -169,7 +179,9 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: "PROD-1",
     name: "Miel Artesanal (500ml)",
+    description: "Miel pura de abeja, cosecha de temporada. Sin aditivos.",
     price: 5.00,
+    stock: 25,
     allowsBarter: true,
     seller: "Cooperativa La Abeja",
     storeId: 'S1',
@@ -179,7 +191,9 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: "PROD-2",
     name: "Jalea Real",
+    description: "Suplemento natural energético. Frasco de 30g.",
     price: 8.50,
+    stock: 3, // Low stock test
     allowsBarter: false,
     seller: "Cooperativa La Abeja",
     storeId: 'S1',
@@ -189,7 +203,9 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: "PROD-3",
     name: "Reparación de Pantalla",
+    description: "Mano de obra para cambio de mica o display. No incluye repuesto.",
     price: 15.00,
+    stock: 100, // Service "stock"
     allowsBarter: false,
     seller: "TecnoServicios",
     storeId: 'S2',
@@ -199,7 +215,9 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: "PROD-4",
     name: "Pan Casero (Canilla)",
+    description: "Pan tipo canilla recién horneado.",
     price: 1.50,
+    stock: 0, // Out of stock test
     allowsBarter: true,
     seller: "Panadería Comunal",
     storeId: 'S3',

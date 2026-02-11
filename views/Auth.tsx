@@ -7,8 +7,14 @@ interface AuthProps {
 
 export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [view, setView] = useState<'login' | 'register' | 'forgot_password'>('login');
+  
+  // Form State
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [cedula, setCedula] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  
   const { darkMode, toggleDarkMode } = useTheme();
   
   // Biometric Simulation State
@@ -53,6 +59,14 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             switchView('login');
         }, 2500);
         return;
+    }
+
+    // Validation for registration
+    if (view === 'register') {
+        if (!cedula || !phone || !name) {
+            alert("Por favor complete todos los campos obligatorios.");
+            return;
+        }
     }
 
     onLogin();
@@ -161,24 +175,61 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             )}
 
             <div className={`transition-all duration-300 transform ${isAnimatingView ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {view === 'register' && (
-                        <div>
-                            <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">Nombre Completo</label>
-                            <div className="relative group">
-                                <span className="material-symbols-outlined absolute left-4 top-3.5 text-slate-300 dark:text-slate-600 group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors text-xl">badge</span>
-                                <input 
-                                    type="text" 
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-brand-blue/20 dark:focus:border-sky-500/30 rounded-2xl py-3.5 pl-12 pr-4 outline-none transition-all font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                                    placeholder="Ej. María González"
-                                    required={view === 'register'}
-                                />
+                        <>
+                            <div>
+                                <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">Nombre Completo</label>
+                                <div className="relative group">
+                                    <span className="material-symbols-outlined absolute left-4 top-3.5 text-slate-300 dark:text-slate-600 group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors text-xl">badge</span>
+                                    <input 
+                                        type="text" 
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-brand-blue/20 dark:focus:border-sky-500/30 rounded-2xl py-3.5 pl-12 pr-4 outline-none transition-all font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                        placeholder="Ej. María González"
+                                        required
+                                    />
+                                </div>
                             </div>
-                        </div>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">Cédula</label>
+                                    <div className="relative group">
+                                        <span className="material-symbols-outlined absolute left-3 top-3.5 text-slate-300 dark:text-slate-600 group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors text-lg">id_card</span>
+                                        <input 
+                                            type="text" 
+                                            value={cedula}
+                                            onChange={(e) => setCedula(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-brand-blue/20 dark:focus:border-sky-500/30 rounded-2xl py-3.5 pl-10 pr-3 outline-none transition-all font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600 text-sm"
+                                            placeholder="V-12.345..."
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">Teléfono</label>
+                                    <div className="relative group">
+                                        <span className="material-symbols-outlined absolute left-3 top-3.5 text-slate-300 dark:text-slate-600 group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors text-lg">smartphone</span>
+                                        <input 
+                                            type="tel" 
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-brand-blue/20 dark:focus:border-sky-500/30 rounded-2xl py-3.5 pl-10 pr-3 outline-none transition-all font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600 text-sm"
+                                            placeholder="0412..."
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </>
                     )}
                 
                     <div>
-                        <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">Correo / Cédula</label>
+                        <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">
+                            {view === 'register' ? 'Correo Electrónico' : 'Correo / Cédula'}
+                        </label>
                         <div className="relative group">
                             <span className="material-symbols-outlined absolute left-4 top-3.5 text-slate-300 dark:text-slate-600 group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors text-xl">mail</span>
                             <input 
@@ -186,7 +237,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-brand-blue/20 dark:focus:border-sky-500/30 rounded-2xl py-3.5 pl-12 pr-4 outline-none transition-all font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                                placeholder="usuario@comuna.ve"
+                                placeholder={view === 'register' ? "ejemplo@comuna.ve" : "usuario@comuna.ve"}
                                 required
                             />
                         </div>

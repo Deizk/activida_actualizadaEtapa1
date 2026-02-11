@@ -1,22 +1,19 @@
 import React, { useState, useMemo } from 'react';
-import { MOCK_INCIDENTS, MOCK_HIGHLIGHTS, MOCK_NOTIFICATIONS, MOCK_USER_PROFILE, MOCK_BULLETIN } from '../constants';
+import { MOCK_INCIDENTS, MOCK_HIGHLIGHTS, MOCK_NOTIFICATIONS, MOCK_BULLETIN } from '../constants';
 import { Incident, IncidentStatus, IncidentPriority } from '../types';
 
 export const MobileHome: React.FC = () => {
-  const [showMicroPanel, setShowMicroPanel] = useState(false);
-  const [panelTab, setPanelTab] = useState<'notifications' | 'profile'>('notifications');
+  const [showNotifications, setShowNotifications] = useState(false);
   
   // Map State
   const [selectedCluster, setSelectedCluster] = useState<{ points: any[], top: number, left: number } | null>(null);
   const [mapFilter, setMapFilter] = useState<'all' | 'agua' | 'luz' | 'gas'>('all');
 
-  const togglePanel = (tab: 'notifications' | 'profile') => {
-    if (showMicroPanel && panelTab === tab) {
-      setShowMicroPanel(false);
-    } else {
-      setPanelTab(tab);
-      setShowMicroPanel(true);
-    }
+  // Services Monitor State
+  const [serviceTab, setServiceTab] = useState<'luz' | 'gas' | 'aseo'>('luz');
+
+  const toggleNotifications = () => {
+    setShowNotifications(!showNotifications);
   };
 
   const unreadCount = MOCK_NOTIFICATIONS.filter(n => !n.read).length;
@@ -24,6 +21,25 @@ export const MobileHome: React.FC = () => {
   // Mock Data for New Widgets
   const WEATHER = { temp: 28, condition: 'Soleado', humidity: '65%', icon: 'wb_sunny' };
   const BCV_RATE = { value: 45.84, trend: 'up', lastUpdate: '1:00 PM' };
+
+  // --- DETAILED SERVICES DATA ---
+  const ELECTRICITY_STATUS = [
+      { id: 1, sector: 'Bloques 1-10', status: 'active', condition: 'Estable', voltage: '110v' },
+      { id: 2, sector: 'Veredas del Norte', status: 'inactive', condition: 'Sin Luz', voltage: '0v', cause: 'Racionamiento' },
+      { id: 3, sector: 'Calle Principal', status: 'warning', condition: 'Fluctuante', voltage: '95v', cause: 'Bajo Voltaje' },
+  ];
+
+  const GAS_STATUS = [
+      { id: 1, sector: 'Bloques', action: 'Llenado', status: 'waiting_return', detail: 'Cilindros en planta', date: 'Retorno: Viernes PM' },
+      { id: 2, sector: 'Casas Bajas', action: 'Recolección', status: 'collecting', detail: 'Camión recibiendo vacíos', date: 'Hoy hasta 12:00 PM' },
+      { id: 3, sector: 'Sector Comercial', action: 'Abastecido', status: 'completed', detail: 'Ciclo completado', date: 'Próx: 15 Días' },
+  ];
+
+  const WASTE_STATUS = [
+      { id: 1, route: 'Ruta 1 (Av. Bolívar)', status: 'completed', time: 'Pasó a las 7:30 AM' },
+      { id: 2, route: 'Ruta 2 (Interna)', status: 'pending', time: 'Esperando unidad (Jueves)' },
+      { id: 3, route: 'Ruta 3 (Comercios)', status: 'delayed', time: 'Retraso por avería' },
+  ];
 
   // --- MAP LOGIC ---
 
@@ -108,88 +124,60 @@ export const MobileHome: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
              <button 
-                onClick={() => togglePanel('notifications')}
-                className={`p-2 relative rounded-full transition-colors ${panelTab === 'notifications' && showMicroPanel ? 'bg-brand-blue text-white' : 'bg-gray-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-600'}`}
+                onClick={toggleNotifications}
+                className={`p-2 relative rounded-full transition-colors ${showNotifications ? 'bg-brand-blue text-white' : 'bg-gray-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-600'}`}
              >
                 <span className="material-symbols-outlined text-xl">notifications</span>
                 {unreadCount > 0 && (
                    <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
                 )}
              </button>
-             <button 
-                onClick={() => togglePanel('profile')}
-                className={`w-9 h-9 rounded-full border flex items-center justify-center font-bold text-sm transition-all ${panelTab === 'profile' && showMicroPanel ? 'bg-brand-blue border-brand-blue text-white ring-2 ring-brand-blue/30' : 'bg-brand-blue/10 dark:bg-sky-500/10 border-brand-blue/20 dark:border-sky-500/20 text-brand-blue dark:text-sky-400'}`}
-             >
-                MG
-             </button>
           </div>
         </div>
       </header>
 
-      {/* MICRO PANEL OVERLAY */}
-      {showMicroPanel && (
+      {/* NOTIFICATIONS PANEL OVERLAY */}
+      {showNotifications && (
         <>
-          <div className="fixed inset-0 z-30 bg-black/20 backdrop-blur-[1px]" onClick={() => setShowMicroPanel(false)}></div>
+          <div className="fixed inset-0 z-30 bg-black/20 backdrop-blur-[1px]" onClick={() => setShowNotifications(false)}></div>
           <div className="absolute top-20 left-4 right-4 z-40 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 overflow-hidden animate-fade-in-down origin-top">
-             <div className="flex border-b border-gray-100 dark:border-slate-700">
-                <button 
-                   onClick={() => setPanelTab('notifications')}
-                   className={`flex-1 py-3 text-sm font-bold transition-colors border-b-2 ${panelTab === 'notifications' ? 'text-brand-blue dark:text-sky-400 border-brand-blue dark:border-sky-400 bg-blue-50/50 dark:bg-slate-700/50' : 'text-slate-500 border-transparent hover:bg-gray-50 dark:hover:bg-slate-700'}`}
-                >
-                   Notificaciones
-                </button>
-                <button 
-                   onClick={() => setPanelTab('profile')}
-                   className={`flex-1 py-3 text-sm font-bold transition-colors border-b-2 ${panelTab === 'profile' ? 'text-brand-blue dark:text-sky-400 border-brand-blue dark:border-sky-400 bg-blue-50/50 dark:bg-slate-700/50' : 'text-slate-500 border-transparent hover:bg-gray-50 dark:hover:bg-slate-700'}`}
-                >
-                   Mi Resumen
+             <div className="flex justify-between items-center p-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-700/30">
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Notificaciones</h3>
+                <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <span className="material-symbols-outlined text-lg">close</span>
                 </button>
              </div>
-             {panelTab === 'notifications' && (
-                <div className="max-h-[60vh] overflow-y-auto p-2">
-                   {MOCK_NOTIFICATIONS.length > 0 ? (
-                      <div className="space-y-1">
-                         {MOCK_NOTIFICATIONS.map(notif => (
-                            <div key={notif.id} className={`p-3 rounded-xl flex gap-3 ${notif.read ? 'bg-transparent opacity-70' : 'bg-blue-50 dark:bg-slate-700/40'}`}>
-                               <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                  notif.type === 'alert' ? 'bg-red-100 text-red-600' :
-                                  notif.type === 'community' ? 'bg-green-100 text-green-600' :
-                                  'bg-slate-100 text-slate-600'
-                               }`}>
-                                  <span className="material-symbols-outlined text-base">
-                                     {notif.type === 'alert' ? 'warning' : notif.type === 'community' ? 'groups' : 'info'}
-                                  </span>
-                               </div>
-                               <div className="flex-1">
-                                  <div className="flex justify-between items-start">
-                                     <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">{notif.title}</h4>
-                                     <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">{notif.time}</span>
-                                  </div>
-                                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug">{notif.message}</p>
-                               </div>
+             
+             <div className="max-h-[60vh] overflow-y-auto p-2">
+                {MOCK_NOTIFICATIONS.length > 0 ? (
+                   <div className="space-y-1">
+                      {MOCK_NOTIFICATIONS.map(notif => (
+                         <div key={notif.id} className={`p-3 rounded-xl flex gap-3 ${notif.read ? 'bg-transparent opacity-70' : 'bg-blue-50 dark:bg-slate-700/40'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                               notif.type === 'alert' ? 'bg-red-100 text-red-600' :
+                               notif.type === 'community' ? 'bg-green-100 text-green-600' :
+                               'bg-slate-100 text-slate-600'
+                            }`}>
+                               <span className="material-symbols-outlined text-base">
+                                  {notif.type === 'alert' ? 'warning' : notif.type === 'community' ? 'groups' : 'info'}
+                               </span>
                             </div>
-                         ))}
-                      </div>
-                   ) : (
-                      <div className="p-8 text-center text-slate-400">
-                         <p>No tienes notificaciones nuevas</p>
-                      </div>
-                   )}
-                </div>
-             )}
-             {panelTab === 'profile' && (
-                <div className="p-4 bg-gradient-to-b from-white to-gray-50 dark:from-slate-800 dark:to-slate-900">
-                   <div className="flex items-center gap-4 mb-4">
-                      <div className="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-2xl font-bold text-slate-500 dark:text-slate-400 shadow-inner">
-                         MG
-                      </div>
-                      <div>
-                         <h3 className="font-bold text-slate-800 dark:text-white text-lg">{MOCK_USER_PROFILE.name}</h3>
-                         <p className="text-xs font-mono text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded inline-block">{MOCK_USER_PROFILE.cedula}</p>
-                      </div>
+                            <div className="flex-1">
+                               <div className="flex justify-between items-start">
+                                  <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">{notif.title}</h4>
+                                  <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">{notif.time}</span>
+                               </div>
+                               <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug">{notif.message}</p>
+                            </div>
+                         </div>
+                      ))}
                    </div>
-                </div>
-             )}
+                ) : (
+                   <div className="p-8 text-center text-slate-400">
+                      <p>No tienes notificaciones nuevas</p>
+                   </div>
+                )}
+             </div>
           </div>
         </>
       )}
@@ -244,7 +232,7 @@ export const MobileHome: React.FC = () => {
               </div>
            </div>
 
-           <div className="relative w-full h-72 bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden shadow-inner border border-gray-200 dark:border-slate-700 group">
+           <div className="relative w-full h-56 bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden shadow-inner border border-gray-200 dark:border-slate-700 group">
                {/* Map Background */}
                <div className="absolute inset-0 bg-[url('https://picsum.photos/800/600?grayscale')] bg-cover opacity-30 dark:opacity-20 transition-transform duration-1000 group-hover:scale-105"></div>
                
@@ -344,39 +332,120 @@ export const MobileHome: React.FC = () => {
            </div>
         </section>
 
-        {/* 4. Daily Summary */}
+        {/* 4. Detailed Services Monitor (Replaces simple summary) */}
         <section className="px-5 mt-6">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
-            <span className="material-symbols-outlined text-brand-green dark:text-emerald-400">today</span>
-            Resumen del Día
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Incidencias</p>
-                  <p className="text-lg font-black text-slate-800 dark:text-white mt-1">
-                      {mapIncidents.length} <span className="text-xs font-normal text-slate-400">activas</span>
-                  </p>
-                  <div className="w-full bg-gray-100 dark:bg-slate-700 h-1 mt-2 rounded-full overflow-hidden">
-                      <div className="bg-red-500 h-full w-1/3"></div>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+              <div className="p-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-900/30">
+                  <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                          <span className="material-symbols-outlined text-brand-blue dark:text-sky-400">admin_panel_settings</span>
+                          Monitor de Servicios
+                      </h3>
+                      <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-bold">En Tiempo Real</span>
+                  </div>
+                  
+                  {/* Service Tabs */}
+                  <div className="flex bg-gray-200 dark:bg-slate-700 rounded-lg p-1">
+                      <button 
+                          onClick={() => setServiceTab('luz')}
+                          className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${serviceTab === 'luz' ? 'bg-white dark:bg-slate-600 text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                      >
+                          <span className="material-symbols-outlined text-sm">bolt</span>
+                          Luz
+                      </button>
+                      <button 
+                          onClick={() => setServiceTab('gas')}
+                          className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${serviceTab === 'gas' ? 'bg-white dark:bg-slate-600 text-orange-600 dark:text-orange-400 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                      >
+                          <span className="material-symbols-outlined text-sm">propane</span>
+                          Gas
+                      </button>
+                      <button 
+                          onClick={() => setServiceTab('aseo')}
+                          className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${serviceTab === 'aseo' ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                      >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                          Aseo
+                      </button>
                   </div>
               </div>
-              <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Servicios</p>
-                  <div className="flex items-center gap-1 mt-1">
-                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      <p className="text-sm font-bold text-slate-800 dark:text-white">Estables</p>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">Agua: OK | Luz: OK</p>
-              </div>
-              <div className="col-span-2 bg-blue-50 dark:bg-slate-800 p-3 rounded-xl border border-blue-100 dark:border-slate-700 shadow-sm flex items-center justify-between">
-                  <div>
-                      <p className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase">Próximo Evento</p>
-                      <p className="text-sm font-bold text-slate-800 dark:text-white">Asamblea de Voceros</p>
-                      <p className="text-[10px] text-slate-500">Hoy, 4:00 PM • Casa Comunal</p>
-                  </div>
-                  <div className="bg-white dark:bg-slate-700 p-2 rounded-lg text-brand-blue dark:text-sky-400">
-                      <span className="material-symbols-outlined">event</span>
-                  </div>
+
+              {/* Service Content */}
+              <div className="p-4 min-h-[180px]">
+                  {serviceTab === 'luz' && (
+                      <div className="space-y-3 animate-fade-in-up">
+                          {ELECTRICITY_STATUS.map(item => (
+                              <div key={item.id} className="flex items-center justify-between p-3 border border-gray-100 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-700/30">
+                                  <div className="flex items-center gap-3">
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                          item.status === 'active' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 
+                                          item.status === 'warning' ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                          'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                      }`}>
+                                          <span className="material-symbols-outlined text-sm">bolt</span>
+                                      </div>
+                                      <div>
+                                          <p className="text-sm font-bold text-slate-800 dark:text-white">{item.sector}</p>
+                                          <p className="text-xs text-slate-500 dark:text-slate-400">{item.condition} {item.voltage !== '0v' ? `• ${item.voltage}` : ''}</p>
+                                      </div>
+                                  </div>
+                                  {item.status !== 'active' && (
+                                      <span className="text-[10px] bg-white dark:bg-slate-800 px-2 py-1 rounded border border-gray-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium">
+                                          {item.cause}
+                                      </span>
+                                  )}
+                              </div>
+                          ))}
+                      </div>
+                  )}
+
+                  {serviceTab === 'gas' && (
+                      <div className="space-y-3 animate-fade-in-up">
+                          {GAS_STATUS.map(item => (
+                              <div key={item.id} className="p-3 border border-gray-100 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-700/30">
+                                  <div className="flex justify-between items-start mb-2">
+                                      <div>
+                                          <p className="text-sm font-bold text-slate-800 dark:text-white">{item.sector}</p>
+                                          <p className="text-xs text-slate-500 dark:text-slate-400">{item.action}</p>
+                                      </div>
+                                      <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase ${
+                                          item.status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                                          item.status === 'collecting' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                                          'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                                      }`}>
+                                          {item.status === 'completed' ? 'Listo' : item.status === 'collecting' ? 'Activo' : 'Espera'}
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-2 rounded-lg">
+                                      <span className="material-symbols-outlined text-sm text-brand-orange">schedule</span>
+                                      {item.date}
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+
+                  {serviceTab === 'aseo' && (
+                      <div className="space-y-3 animate-fade-in-up">
+                          {WASTE_STATUS.map(item => (
+                              <div key={item.id} className="flex items-center justify-between p-3 border border-gray-100 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-700/30">
+                                  <div className="flex items-center gap-3">
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                          item.status === 'completed' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 
+                                          item.status === 'pending' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                                          'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                      }`}>
+                                          <span className="material-symbols-outlined text-sm">{item.status === 'completed' ? 'check_circle' : item.status === 'pending' ? 'hourglass_empty' : 'warning'}</span>
+                                      </div>
+                                      <div>
+                                          <p className="text-sm font-bold text-slate-800 dark:text-white">{item.route}</p>
+                                          <p className="text-xs text-slate-500 dark:text-slate-400">{item.time}</p>
+                                      </div>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  )}
               </div>
           </div>
         </section>

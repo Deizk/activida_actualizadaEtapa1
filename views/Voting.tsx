@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { MOCK_PROPOSALS } from '../constants';
 import { Proposal, ProposalCategory } from '../types';
 
 interface VotingProps {
+  proposals: Proposal[];
+  userVotes: Record<string, 'for' | 'against'>;
   onVoteSubmit: (proposal: Proposal, vote: 'for' | 'against', justification: string) => void;
 }
 
-export const Voting: React.FC<VotingProps> = ({ onVoteSubmit }) => {
+export const Voting: React.FC<VotingProps> = ({ proposals, userVotes, onVoteSubmit }) => {
   const [filter, setFilter] = useState<ProposalCategory | 'all'>('all');
+  
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [voteType, setVoteType] = useState<'for' | 'against' | null>(null);
   const [justification, setJustification] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const activeProposals = MOCK_PROPOSALS.filter(
+  const activeProposals = proposals.filter(
     p => p.status === 'active' && (filter === 'all' || p.category === filter)
   );
 
@@ -26,8 +28,12 @@ export const Voting: React.FC<VotingProps> = ({ onVoteSubmit }) => {
   const handleConfirmVote = () => {
     if (selectedProposal && voteType && justification.length > 5) {
       setIsSubmitting(true);
+      
       setTimeout(() => {
+        // Trigger parent handler
         onVoteSubmit(selectedProposal, voteType, justification);
+
+        // Reset UI states
         setIsSubmitting(false);
         setSelectedProposal(null);
         setVoteType(null);
@@ -88,9 +94,13 @@ export const Voting: React.FC<VotingProps> = ({ onVoteSubmit }) => {
         {activeProposals.map((prop) => {
           const total = prop.votesFor + prop.votesAgainst;
           const pctFor = total > 0 ? (prop.votesFor / total) * 100 : 0;
+          const pctAgainst = total > 0 ? (prop.votesAgainst / total) * 100 : 0;
+          
+          const myVote = userVotes[prop.id];
+          const hasVoted = !!myVote;
           
           return (
-            <div key={prop.id} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all flex flex-col h-full">
+            <div key={prop.id} className={`bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border transition-all flex flex-col h-full ${hasVoted ? 'border-brand-green/50 dark:border-brand-green/30 ring-1 ring-brand-green/20' : 'border-gray-100 dark:border-slate-700 hover:shadow-md'}`}>
               <div className="flex justify-between items-start mb-3">
                 <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300`}>
                   <span className="material-symbols-outlined text-sm">{getCategoryIcon(prop.category)}</span>
@@ -115,30 +125,55 @@ export const Voting: React.FC<VotingProps> = ({ onVoteSubmit }) => {
               )}
 
               {/* Progress Bar (Anonymous Trend) */}
-              <div className="space-y-1 mb-6">
+              <div className="space-y-2 mb-6">
                 <div className="flex justify-between text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                   <span>Tendencia Actual</span>
+                   <span>A Favor ({prop.votesFor})</span>
+                   <span>En Contra ({prop.votesAgainst})</span>
                 </div>
-                <div className="h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
-                  <div style={{ width: `${pctFor}%` }} className="bg-slate-300 dark:bg-slate-600 h-full"></div>
+                <div className="h-3 bg-red-100 dark:bg-red-900/30 rounded-full overflow-hidden flex relative">
+                  <div style={{ width: `${pctFor}%` }} className="bg-brand-green h-full transition-all duration-1000 ease-out relative"></div>
                 </div>
+                {hasVoted && (
+                    <div className="flex justify-between text-[10px] font-bold pt-1">
+                        <span className="text-brand-green">{pctFor.toFixed(1)}%</span>
+                        <span className="text-red-500">{pctAgainst.toFixed(1)}%</span>
+                    </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-auto">
-                <button 
-                    onClick={() => handleOpenVote(prop, 'for')}
-                    className="py-3 bg-brand-green/10 text-brand-green dark:text-emerald-400 dark:bg-emerald-900/20 rounded-xl font-bold hover:bg-brand-green hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white transition-all flex items-center justify-center gap-2 border border-brand-green/20 dark:border-emerald-500/30"
-                >
-                  <span className="material-symbols-outlined text-lg">thumb_up</span>
-                  A Favor
-                </button>
-                <button 
-                    onClick={() => handleOpenVote(prop, 'against')}
-                    className="py-3 bg-red-50 text-red-600 dark:text-red-400 dark:bg-red-900/20 rounded-xl font-bold hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-500/30"
-                >
-                  <span className="material-symbols-outlined text-lg">thumb_down</span>
-                  En Contra
-                </button>
+              <div className="mt-auto">
+                {hasVoted ? (
+                    <div className={`py-3 rounded-xl border flex flex-col items-center justify-center text-center animate-fade-in-up ${
+                        myVote === 'for' 
+                            ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' 
+                            : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30'
+                    }`}>
+                        <div className={`flex items-center gap-2 mb-1 ${
+                             myVote === 'for' ? 'text-brand-green dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
+                             <span className="material-symbols-outlined">{myVote === 'for' ? 'thumb_up' : 'thumb_down'}</span>
+                             <span className="font-bold text-sm">Votaste {myVote === 'for' ? 'A FAVOR' : 'EN CONTRA'}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">Tu voto ha sido registrado correctamente.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                        <button 
+                            onClick={() => handleOpenVote(prop, 'for')}
+                            className="py-3 bg-brand-green/10 text-brand-green dark:text-emerald-400 dark:bg-emerald-900/20 rounded-xl font-bold hover:bg-brand-green hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white transition-all flex items-center justify-center gap-2 border border-brand-green/20 dark:border-emerald-500/30"
+                        >
+                        <span className="material-symbols-outlined text-lg">thumb_up</span>
+                        A Favor
+                        </button>
+                        <button 
+                            onClick={() => handleOpenVote(prop, 'against')}
+                            className="py-3 bg-red-50 text-red-600 dark:text-red-400 dark:bg-red-900/20 rounded-xl font-bold hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-500/30"
+                        >
+                        <span className="material-symbols-outlined text-lg">thumb_down</span>
+                        En Contra
+                        </button>
+                    </div>
+                )}
               </div>
             </div>
           );

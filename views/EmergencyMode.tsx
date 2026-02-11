@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { MinorProfile } from '../types';
 
-export const EmergencyMode: React.FC = () => {
+interface EmergencyModeProps {
+  linkedMinor?: MinorProfile | null;
+}
+
+export const EmergencyMode: React.FC<EmergencyModeProps> = ({ linkedMinor }) => {
   const [sosActive, setSosActive] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -12,13 +17,15 @@ export const EmergencyMode: React.FC = () => {
     } else if (sosActive && countdown === 0) {
       // Trigger actual alert here
       const serviceName = getServiceName(selectedService);
-      alert(`¡Alerta SOS enviada a ${serviceName} y contactos de confianza con tu ubicación en tiempo real!`);
+      const subject = linkedMinor ? `ALERTA MÉDICA: ${linkedMinor.name} (ID: ${linkedMinor.medicalRecordId || 'N/A'})` : 'ALERTA PERSONAL';
+      
+      alert(`¡${subject} enviada a ${serviceName} y contactos de confianza con ubicación en tiempo real!`);
       setSosActive(false);
       setCountdown(5);
       setSelectedService(null);
     }
     return () => clearTimeout(timer);
-  }, [sosActive, countdown, selectedService]);
+  }, [sosActive, countdown, selectedService, linkedMinor]);
 
   const getServiceName = (id: string | null) => {
     switch(id) {
@@ -83,7 +90,7 @@ export const EmergencyMode: React.FC = () => {
       {/* Background Pulse Effect */}
       <div className={`absolute inset-0 bg-red-900/10 pointer-events-none transition-opacity duration-500 ${selectedService ? 'opacity-100 animate-pulse-slow' : 'opacity-0'}`}></div>
 
-      <header className="p-6 text-center relative z-10">
+      <header className="p-6 pb-2 text-center relative z-10">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/20 border border-red-500/50 mb-4 animate-bounce">
             <span className="material-symbols-outlined text-3xl text-red-500">e911_emergency</span>
         </div>
@@ -92,6 +99,23 @@ export const EmergencyMode: React.FC = () => {
       </header>
 
       <div className="flex-1 px-6 pb-6 overflow-y-auto">
+        
+        {/* Linked Minor Profile Banner */}
+        {linkedMinor && (
+            <div className="mb-6 bg-red-600/20 border border-red-500/50 p-3 rounded-xl flex items-center gap-3 animate-fade-in-up">
+                <div className="w-10 h-10 rounded-full bg-white text-red-600 flex items-center justify-center font-bold text-lg shrink-0">
+                    {linkedMinor.name.charAt(0)}
+                </div>
+                <div className="flex-1">
+                    <p className="text-[10px] font-bold text-red-300 uppercase tracking-wider">Reportando para:</p>
+                    <p className="font-bold text-white text-lg leading-none">{linkedMinor.name}</p>
+                    {linkedMinor.conditions.length > 0 && (
+                        <p className="text-[10px] text-white/80 mt-1">Condición: {linkedMinor.conditions.join(', ')}</p>
+                    )}
+                </div>
+                <span className="material-symbols-outlined text-red-400 text-2xl">medical_services</span>
+            </div>
+        )}
         
         {/* SOS Big Button */}
         <div className="mb-8 flex justify-center">
@@ -187,7 +211,10 @@ export const EmergencyMode: React.FC = () => {
                     <span className="material-symbols-outlined text-lg">add</span>
                 </button>
             </div>
-            <p className="text-xs text-slate-500">Se enviará un SMS con tu geolocalización.</p>
+            <p className="text-xs text-slate-500">
+                Se enviará un SMS con tu geolocalización
+                {linkedMinor ? ` y la ficha médica de ${linkedMinor.name}` : '.'}
+            </p>
         </div>
       </div>
     </div>
