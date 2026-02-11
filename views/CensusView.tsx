@@ -1,7 +1,12 @@
 import React from 'react';
 import { MOCK_CENSUS_DATA } from '../constants';
+import { UserProfileData, FamilyMember } from '../types';
 
-export const CensusView: React.FC = () => {
+interface CensusViewProps {
+  onViewProfile?: (profile: UserProfileData) => void;
+}
+
+export const CensusView: React.FC<CensusViewProps> = ({ onViewProfile }) => {
   const data = MOCK_CENSUS_DATA;
 
   // Helper to count demographics
@@ -10,6 +15,31 @@ export const CensusView: React.FC = () => {
     minors: data.members.filter(m => m.age < 18).length,
     elderly: data.members.filter(m => m.age >= 60).length,
     vulnerable: data.members.filter(m => m.condition !== 'Ninguna').length
+  };
+
+  const handleMemberClick = (member: FamilyMember) => {
+    if (onViewProfile) {
+        // Construct a mock full profile from partial census data
+        const fullProfile: UserProfileData = {
+            name: member.name,
+            cedula: member.cedula || "V-XX.XXX.XXX",
+            age: member.age,
+            email: "sin_registro@comuna.ve",
+            phone: "0412-XXX-XXXX",
+            profession: member.occupation,
+            currentTrade: member.occupation,
+            skills: ["Vecino/a", "Participación Familiar"],
+            bio: `Residente de la comunidad. Parentesco registrado: ${member.relation}.`,
+            communityReputation: 50, // Default neutral reputation for family members
+            medicalSummary: { 
+                bloodType: "?", 
+                allergies: [], 
+                chronicConditions: member.condition && member.condition !== 'Ninguna' ? [member.condition] : [], 
+                mobilityIssue: member.condition === 'Cama' || member.condition === 'Discapacidad'
+            }
+        };
+        onViewProfile(fullProfile);
+    }
   };
 
   const ServiceIndicator = ({ label, status, icon }: { label: string, status: boolean | string, icon: string }) => {
@@ -87,19 +117,26 @@ export const CensusView: React.FC = () => {
 
              <div className="space-y-3">
                 {data.members.map(member => (
-                    <div key={member.id} className="flex items-center gap-3 p-3 border border-gray-100 dark:border-slate-700 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold">
+                    <div 
+                        key={member.id} 
+                        onClick={() => handleMemberClick(member)}
+                        className="flex items-center gap-3 p-3 border border-gray-100 dark:border-slate-700 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:scale-[0.98]"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold group-hover:bg-brand-blue/10 dark:group-hover:bg-sky-500/10 group-hover:text-brand-blue dark:group-hover:text-sky-400 transition-colors">
                             {member.name.charAt(0)}
                         </div>
                         <div className="flex-1">
-                            <h4 className="font-bold text-slate-800 dark:text-white text-sm">{member.name}</h4>
+                            <h4 className="font-bold text-slate-800 dark:text-white text-sm group-hover:text-brand-blue dark:group-hover:text-sky-400 transition-colors">{member.name}</h4>
                             <p className="text-xs text-slate-500 dark:text-slate-400">{member.relation} • {member.age} años • {member.occupation}</p>
                         </div>
-                        {member.condition !== 'Ninguna' && (
-                             <span className="bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-bold px-2 py-1 rounded-full uppercase">
-                                {member.condition}
-                             </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {member.condition !== 'Ninguna' && (
+                                <span className="bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                                    {member.condition}
+                                </span>
+                            )}
+                            <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+                        </div>
                     </div>
                 ))}
              </div>

@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { MOCK_VOLUNTEER_TASKS } from '../constants';
-import { VolunteerTask } from '../types';
+import { UserProfileData } from '../types';
 
-export const VolunteerTasks: React.FC = () => {
+interface VolunteerTasksProps {
+    onViewProfile?: (profile: UserProfileData) => void;
+}
+
+export const VolunteerTasks: React.FC<VolunteerTasksProps> = ({ onViewProfile }) => {
   const [tasks, setTasks] = useState(MOCK_VOLUNTEER_TASKS);
   const [joinedTasks, setJoinedTasks] = useState<string[]>([]);
 
@@ -16,6 +20,26 @@ export const VolunteerTasks: React.FC = () => {
       return t;
     }));
     setJoinedTasks(prev => [...prev, id]);
+  };
+
+  const handleLeaderClick = (leader: any) => {
+      if (onViewProfile) {
+          // Construct a mock full profile from partial leader data
+          const fullProfile: UserProfileData = {
+              name: leader.name,
+              cedula: "V-XX.XXX.XXX", // Hidden
+              age: 0,
+              email: "contacto@comuna.ve",
+              phone: "0412-XXX-XXXX",
+              profession: leader.role,
+              currentTrade: "Voluntario",
+              skills: ["Liderazgo", "Organización", "Trabajo en Equipo"],
+              bio: `Líder comunitario activo en ${leader.role}. Coordinando actividades de voluntariado para el bienestar de todos.`,
+              communityReputation: leader.reputation,
+              medicalSummary: { bloodType: "?", allergies: [], chronicConditions: [], mobilityIssue: false }
+          };
+          onViewProfile(fullProfile);
+      }
   };
 
   const getTaskIcon = (type: string) => {
@@ -84,6 +108,28 @@ export const VolunteerTasks: React.FC = () => {
                 
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 flex-1">{task.description}</p>
                 
+                {/* LEADER PROFILE MINI-CARD (CLICKABLE) */}
+                <div 
+                    onClick={() => handleLeaderClick(task.leader)}
+                    className="mb-4 bg-gray-50 dark:bg-slate-700/50 p-3 rounded-xl border border-gray-100 dark:border-slate-600/50 flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors group/leader"
+                >
+                    <div className="w-10 h-10 rounded-full bg-brand-blue/10 dark:bg-sky-500/10 border border-brand-blue/20 dark:border-sky-500/20 flex items-center justify-center text-brand-blue dark:text-sky-400 font-bold text-xs group-hover/leader:scale-110 transition-transform">
+                        {task.leader.avatar}
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Líder de Actividad</p>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white leading-tight group-hover/leader:text-brand-blue dark:group-hover/leader:text-sky-400 transition-colors">{task.leader.name}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{task.leader.role}</p>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-1">
+                         <div className="flex items-center gap-1 bg-white dark:bg-slate-600 px-2 py-0.5 rounded-lg shadow-sm">
+                            <span className="material-symbols-outlined text-brand-blue dark:text-sky-400 text-sm">verified</span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{task.leader.reputation}%</span>
+                         </div>
+                         <span className="text-[10px] text-brand-blue dark:text-sky-400 font-bold opacity-0 group-hover/leader:opacity-100 transition-opacity">Ver Perfil</span>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs font-medium text-slate-600 dark:text-slate-300 mb-4">
                    <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-brand-blue dark:text-sky-400 text-lg">calendar_month</span>

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { MOCK_PRODUCTS, MOCK_STORES } from '../constants';
-import { Product } from '../types';
+import { Product, UserProfileData } from '../types';
 
 interface MarketplaceProps {
   onAddToCart: (product: Product) => void;
+  onViewProfile?: (profile: UserProfileData) => void;
 }
 
-export const Marketplace: React.FC<MarketplaceProps> = ({ onAddToCart }) => {
+export const Marketplace: React.FC<MarketplaceProps> = ({ onAddToCart, onViewProfile }) => {
   const [activeTab, setActiveTab] = useState<'products' | 'stores'>('products');
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
 
@@ -14,6 +15,22 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onAddToCart }) => {
   const displayedProducts = activeTab === 'stores' && selectedStore 
     ? MOCK_PRODUCTS.filter(p => p.storeId === selectedStore)
     : MOCK_PRODUCTS;
+
+  // Get selected store object
+  const currentStore = selectedStore ? MOCK_STORES.find(s => s.id === selectedStore) : null;
+  const entrepreneur = currentStore?.ownerProfile;
+
+  const handleContact = () => {
+    if (entrepreneur) {
+        alert(`Iniciando chat seguro P2P con ${entrepreneur.name}...\n\n(Simulación: Redirigiendo a módulo de mensajería)`);
+    }
+  };
+
+  const handleViewFullProfile = () => {
+    if (entrepreneur && onViewProfile) {
+        onViewProfile(entrepreneur);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 transition-colors duration-300 animate-fade-in-up">
@@ -85,16 +102,80 @@ export const Marketplace: React.FC<MarketplaceProps> = ({ onAddToCart }) => {
             </div>
         )}
 
-        {/* VIEW: PRODUCTS GRID (Or Store Detail) */}
+        {/* VIEW: PRODUCTS GRID (Or Store Detail with Entrepreneur Profile) */}
         {(activeTab === 'products' || selectedStore) && (
             <div>
-                {selectedStore && (
-                    <div className="mb-4 flex items-center gap-2">
-                        <button onClick={() => setSelectedStore(null)} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
-                            <span className="material-symbols-outlined text-slate-600 dark:text-slate-300">arrow_back</span>
+                {/* Back Button and Entrepreneur Profile */}
+                {selectedStore && currentStore && entrepreneur && (
+                    <div className="mb-6 animate-fade-in-down">
+                        <button onClick={() => setSelectedStore(null)} className="flex items-center gap-1 text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 hover:text-brand-blue transition-colors">
+                            <span className="material-symbols-outlined text-lg">arrow_back</span>
+                            Volver a Emprendedores
                         </button>
-                        <h3 className="font-bold text-slate-800 dark:text-white">
-                            Productos de {MOCK_STORES.find(s => s.id === selectedStore)?.name}
+                        
+                        {/* ENTREPRENEUR PROFILE CARD */}
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden border border-gray-100 dark:border-slate-700 mb-6">
+                            {/* Banner & Avatar */}
+                            <div className="h-24 bg-gradient-to-r from-brand-blue to-cyan-500 dark:from-sky-800 dark:to-cyan-900"></div>
+                            <div className="px-6 relative pb-6">
+                                <div className="absolute -top-10 left-6">
+                                    <div className="w-20 h-20 rounded-2xl bg-white dark:bg-slate-700 p-1 shadow-lg">
+                                        <img src={currentStore.image} alt={currentStore.name} className="w-full h-full object-cover rounded-xl" />
+                                    </div>
+                                </div>
+                                <div className="ml-24 pt-2">
+                                    <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight flex items-center gap-1">
+                                        {entrepreneur.name}
+                                        <span className="material-symbols-outlined text-brand-blue text-lg" title="Verificado">verified</span>
+                                    </h2>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">{entrepreneur.currentTrade} • {currentStore.name}</p>
+                                </div>
+                                
+                                {/* Bio Section */}
+                                <div className="mt-6">
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 italic mb-4 bg-gray-50 dark:bg-slate-700/50 p-3 rounded-lg border-l-4 border-brand-blue">
+                                        "{entrepreneur.bio}"
+                                    </p>
+                                    
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                        <div className="bg-blue-50 dark:bg-blue-900/10 p-2 rounded-lg text-center">
+                                            <span className="block text-lg font-black text-brand-blue dark:text-sky-400">{entrepreneur.communityReputation}%</span>
+                                            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Reputación</span>
+                                        </div>
+                                        <div className="bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded-lg text-center">
+                                            <span className="block text-lg font-black text-yellow-600 dark:text-yellow-400">{currentStore.rating}</span>
+                                            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Valoración</span>
+                                        </div>
+                                        <div className="col-span-2 flex flex-wrap gap-1 content-center">
+                                            {entrepreneur.skills.map(skill => (
+                                                <span key={skill} className="text-[10px] bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-full text-slate-600 dark:text-slate-300 font-bold">
+                                                    {skill}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={handleContact}
+                                            className="flex-1 bg-brand-blue hover:bg-sky-600 text-white py-2 rounded-lg text-sm font-bold shadow-lg shadow-brand-blue/30 transition-colors"
+                                        >
+                                            Contactar
+                                        </button>
+                                        <button 
+                                            onClick={handleViewFullProfile}
+                                            className="flex-1 bg-white hover:bg-gray-50 dark:bg-slate-700 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-2 rounded-lg text-sm font-bold transition-colors"
+                                        >
+                                            Ver Perfil Completo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 className="font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-brand-orange">storefront</span>
+                            Catálogo Disponible
                         </h3>
                     </div>
                 )}

@@ -65,10 +65,30 @@ export interface Product {
   image: string;
 }
 
+export interface UserProfileData {
+  name: string;
+  cedula: string;
+  age: number;
+  email: string;
+  phone: string;
+  profession: string;
+  currentTrade: string; // Oficio actual
+  skills: string[];
+  bio: string; // Resumen curricular breve
+  communityReputation: number; // 1-100
+  medicalSummary: {
+    bloodType: string;
+    allergies: string[];
+    chronicConditions: string[]; // Non-invasive list
+    mobilityIssue: boolean;
+  };
+}
+
 export interface Store {
   id: string;
   name: string;
-  owner: string;
+  owner: string; // Deprecated in UI but kept for ID ref
+  ownerProfile: UserProfileData; // Full profile linkage
   category: string;
   rating: number;
   image: string;
@@ -125,6 +145,12 @@ export interface VolunteerTask {
   maxParticipants: number;
   status: 'open' | 'full' | 'completed';
   image?: string;
+  leader: {
+    name: string;
+    role: string;
+    avatar: string; // initials
+    reputation: number;
+  };
 }
 
 // --- NEW TYPES FOR PROFILE & CENSUS ---
@@ -164,25 +190,6 @@ export interface CensusData {
   lastUpdated: string;
 }
 
-export interface UserProfileData {
-  name: string;
-  cedula: string;
-  age: number;
-  email: string;
-  phone: string;
-  profession: string;
-  currentTrade: string; // Oficio actual
-  skills: string[];
-  bio: string; // Resumen curricular breve
-  communityReputation: number; // 1-100
-  medicalSummary: {
-    bloodType: string;
-    allergies: string[];
-    chronicConditions: string[]; // Non-invasive list
-    mobilityIssue: boolean;
-  };
-}
-
 export interface AppNotification {
   id: string;
   type: 'system' | 'community' | 'alert' | 'personal';
@@ -191,4 +198,26 @@ export interface AppNotification {
   time: string;
   read: boolean;
   priority?: boolean;
+}
+
+// --- MINOR PROFILES ---
+export interface MinorProfile {
+  id: string;
+  guardianId: string; // Link to parent
+  name: string;
+  dateOfBirth: string;
+  age: number;
+  gender: 'M' | 'F';
+  bloodType: string;
+  allergies: string[];
+  conditions: string[];
+  disability: boolean;
+  disabilityDetail?: string;
+  birthCertificateVerified: boolean; // Document proof
+  medicalRecordId?: string; // Link to Central Health Registry
+  emergencyContact: {
+    name: string;
+    relation: string;
+    phone: string;
+  };
 }

@@ -1,4 +1,4 @@
-import { BulletinItem, HighlightItem, Incident, IncidentPriority, IncidentStatus, KPI, Product, Proposal, ServiceStatusItem, Store, VoteRecord, VolunteerTask, UserProfileData, CensusData, AppNotification } from "./types";
+import { BulletinItem, HighlightItem, Incident, IncidentPriority, IncidentStatus, KPI, Product, Proposal, ServiceStatusItem, Store, VoteRecord, VolunteerTask, UserProfileData, CensusData, AppNotification, MinorProfile } from "./types";
 
 export const MOCK_KPIS: KPI[] = [
   { label: "Hogares Conectados", value: "85%", change: "+2%", trend: "up" },
@@ -100,9 +100,69 @@ export const MOCK_VOTE_HISTORY: VoteRecord[] = [
 ];
 
 export const MOCK_STORES: Store[] = [
-  { id: 'S1', name: 'Cooperativa La Abeja', owner: 'Juana Pérez', category: 'Alimentos', rating: 4.8, image: 'https://picsum.photos/100/100?random=20' },
-  { id: 'S2', name: 'TecnoServicios', owner: 'Carlos Ruiz', category: 'Tecnología', rating: 4.5, image: 'https://picsum.photos/100/100?random=21' },
-  { id: 'S3', name: 'Panadería Comunal', owner: 'Consejo Comunal', category: 'Alimentos', rating: 4.9, image: 'https://picsum.photos/100/100?random=22' },
+  { 
+    id: 'S1', 
+    name: 'Cooperativa La Abeja', 
+    owner: 'Juana Pérez', 
+    category: 'Alimentos', 
+    rating: 4.8, 
+    image: 'https://picsum.photos/100/100?random=20',
+    ownerProfile: {
+      name: "Juana Pérez",
+      cedula: "V-15.888.999",
+      age: 45,
+      email: "juana.abeja@comuna.ve",
+      phone: "0416-5555555",
+      profession: "Ing. Agrónoma",
+      currentTrade: "Apicultora Certificada",
+      skills: ["Apicultura", "Gestión Cooperativa", "Botánica"],
+      bio: "Apicultora con más de 15 años de experiencia. Fundadora de la Cooperativa La Abeja, dedicada a la producción de miel orgánica y derivados naturales. Defensora del medio ambiente.",
+      communityReputation: 98,
+      medicalSummary: { bloodType: "A+", allergies: [], chronicConditions: [], mobilityIssue: false }
+    }
+  },
+  { 
+    id: 'S2', 
+    name: 'TecnoServicios', 
+    owner: 'Carlos Ruiz', 
+    category: 'Tecnología', 
+    rating: 4.5, 
+    image: 'https://picsum.photos/100/100?random=21',
+    ownerProfile: {
+      name: "Carlos Ruiz",
+      cedula: "V-20.111.222",
+      age: 28,
+      email: "carlos.tech@comuna.ve",
+      phone: "0424-9999999",
+      profession: "TSU Informática",
+      currentTrade: "Técnico Electrónico",
+      skills: ["Reparación Móviles", "Redes", "Soldadura Microelectrónica"],
+      bio: "Joven emprendedor apasionado por la tecnología. Ofrezco servicio técnico garantizado y asesoría en compra de equipos. Colaborador en la digitalización de la escuela local.",
+      communityReputation: 89,
+      medicalSummary: { bloodType: "O-", allergies: ["Polvo"], chronicConditions: [], mobilityIssue: false }
+    }
+  },
+  { 
+    id: 'S3', 
+    name: 'Panadería Comunal', 
+    owner: 'Consejo Comunal', 
+    category: 'Alimentos', 
+    rating: 4.9, 
+    image: 'https://picsum.photos/100/100?random=22',
+    ownerProfile: {
+      name: "Pedro Castillo (Vocero)",
+      cedula: "V-8.555.444",
+      age: 55,
+      email: "pedro.pan@comuna.ve",
+      phone: "0412-1111111",
+      profession: "Maestro Panadero",
+      currentTrade: "Encargado de Panadería",
+      skills: ["Panadería", "Contabilidad Básica", "Gestión de Personal"],
+      bio: "Encargado de la Panadería Comunal bajo supervisión del Comité de Economía. Nuestro objetivo es garantizar el pan diario a precio justo para todos los vecinos.",
+      communityReputation: 99,
+      medicalSummary: { bloodType: "B+", allergies: [], chronicConditions: ["Diabetes"], mobilityIssue: false }
+    }
+  },
 ];
 
 export const MOCK_PRODUCTS: Product[] = [
@@ -160,7 +220,13 @@ export const MOCK_VOLUNTEER_TASKS: VolunteerTask[] = [
     participants: 12,
     maxParticipants: 20,
     status: 'open',
-    image: 'https://picsum.photos/400/200?random=50'
+    image: 'https://picsum.photos/400/200?random=50',
+    leader: {
+      name: "Roberto Méndez",
+      role: "Vocero de Deportes",
+      avatar: "RM",
+      reputation: 92
+    }
   },
   {
     id: 'T-002',
@@ -173,7 +239,13 @@ export const MOCK_VOLUNTEER_TASKS: VolunteerTask[] = [
     participants: 4,
     maxParticipants: 6,
     status: 'open',
-    image: 'https://picsum.photos/400/200?random=51'
+    image: 'https://picsum.photos/400/200?random=51',
+    leader: {
+      name: "Ing. Luisa Ferrer",
+      role: "Comité de Servicios",
+      avatar: "LF",
+      reputation: 96
+    }
   },
   {
     id: 'T-003',
@@ -186,7 +258,13 @@ export const MOCK_VOLUNTEER_TASKS: VolunteerTask[] = [
     participants: 30,
     maxParticipants: 30,
     status: 'full',
-    image: 'https://picsum.photos/400/200?random=52'
+    image: 'https://picsum.photos/400/200?random=52',
+    leader: {
+      name: "Carlos Ruiz",
+      role: "Voluntario Líder",
+      avatar: "CR",
+      reputation: 89
+    }
   }
 ];
 
@@ -267,4 +345,43 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
   { id: '2', type: 'community', title: 'Llegada del Gas', message: 'El camión de GLP estará en la Calle 3 a las 2:00 PM.', time: 'Hace 2h', read: false },
   { id: '3', type: 'system', title: 'Reporte Aprobado', message: 'Tu incidencia "Hueco en la vía" ha sido clasificada como ALTA prioridad por la IA.', time: 'Ayer', read: true },
   { id: '4', type: 'personal', title: 'Recordatorio de Votación', message: 'La propuesta de presupuesto participativo cierra en 48 horas.', time: 'Ayer', read: true },
+];
+
+export const MOCK_MINORS: MinorProfile[] = [
+  {
+    id: "M-001",
+    guardianId: "1", // Linked to María González
+    name: "Sofía Pérez",
+    dateOfBirth: "2015-05-15",
+    age: 8,
+    gender: "F",
+    bloodType: "O+",
+    allergies: ["Maní"],
+    conditions: ["Asma Leve"],
+    disability: false,
+    birthCertificateVerified: true,
+    emergencyContact: {
+      name: "María González",
+      relation: "Madre",
+      phone: "0412-1234567"
+    }
+  },
+  {
+    id: "M-002",
+    guardianId: "1",
+    name: "Luisito Pérez",
+    dateOfBirth: "2005-08-20", // 18 years old test
+    age: 18,
+    gender: "M",
+    bloodType: "A+",
+    allergies: [],
+    conditions: [],
+    disability: false,
+    birthCertificateVerified: true,
+    emergencyContact: {
+      name: "Pedro Pérez",
+      relation: "Padre",
+      phone: "0416-5555555"
+    }
+  }
 ];

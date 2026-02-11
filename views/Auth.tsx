@@ -6,7 +6,7 @@ interface AuthProps {
 }
 
 export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
-  const [view, setView] = useState<'login' | 'register'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'forgot_password'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { darkMode, toggleDarkMode } = useTheme();
@@ -15,13 +15,18 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [isBioScanning, setIsBioScanning] = useState(false);
   const [bioSuccess, setBioSuccess] = useState(false);
   const [isAnimatingView, setIsAnimatingView] = useState(false);
+  
+  // Password Reset State
+  const [resetSent, setResetSent] = useState(false);
 
-  const switchView = (newView: 'login' | 'register') => {
+  const switchView = (newView: 'login' | 'register' | 'forgot_password') => {
     if (view === newView) return;
     setIsAnimatingView(true);
     setTimeout(() => {
         setView(newView);
         setIsAnimatingView(false);
+        // Reset states when switching
+        setResetSent(false); 
     }, 300);
   };
 
@@ -40,6 +45,16 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (view === 'forgot_password') {
+        setResetSent(true);
+        // Return to login after delay
+        setTimeout(() => {
+            switchView('login');
+        }, 2500);
+        return;
+    }
+
     onLogin();
   };
 
@@ -105,21 +120,45 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 </div>
             )}
 
-            {/* Tabs */}
-            <div className="flex mb-8 bg-slate-100/80 dark:bg-slate-900/50 p-1.5 rounded-2xl relative">
-                <button 
-                    onClick={() => switchView('login')}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${view === 'login' ? 'text-brand-blue dark:text-sky-400 shadow-sm bg-white dark:bg-slate-700' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                >
-                    Ingresar
-                </button>
-                <button 
-                    onClick={() => switchView('register')}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${view === 'register' ? 'text-brand-blue dark:text-sky-400 shadow-sm bg-white dark:bg-slate-700' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                >
-                    Registrarse
-                </button>
-            </div>
+            {/* Forgot Password Success Overlay */}
+            {resetSent && (
+                <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-fade-in-up text-center p-6">
+                    <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-4 text-brand-blue dark:text-sky-400 shadow-inner">
+                        <span className="material-symbols-outlined text-5xl">mark_email_read</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">¡Enlace Enviado!</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Hemos enviado las instrucciones de recuperación a <span className="font-bold text-slate-700 dark:text-slate-300">{email}</span></p>
+                </div>
+            )}
+
+            {/* Tabs (Only visible in Login/Register) */}
+            {view !== 'forgot_password' && (
+                <div className="flex mb-8 bg-slate-100/80 dark:bg-slate-900/50 p-1.5 rounded-2xl relative">
+                    <button 
+                        onClick={() => switchView('login')}
+                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${view === 'login' ? 'text-brand-blue dark:text-sky-400 shadow-sm bg-white dark:bg-slate-700' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                    >
+                        Ingresar
+                    </button>
+                    <button 
+                        onClick={() => switchView('register')}
+                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 relative z-10 ${view === 'register' ? 'text-brand-blue dark:text-sky-400 shadow-sm bg-white dark:bg-slate-700' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                    >
+                        Registrarse
+                    </button>
+                </div>
+            )}
+
+            {/* View Title for Forgot Password */}
+            {view === 'forgot_password' && (
+                <div className="mb-6 text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 mb-3">
+                        <span className="material-symbols-outlined text-2xl">lock_reset</span>
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">Recuperar Acceso</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Ingresa tu correo o cédula registrada</p>
+                </div>
+            )}
 
             <div className={`transition-all duration-300 transform ${isAnimatingView ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -153,36 +192,61 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">Contraseña</label>
-                        <div className="relative group">
-                            <span className="material-symbols-outlined absolute left-4 top-3.5 text-slate-300 dark:text-slate-600 group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors text-xl">lock</span>
-                            <input 
-                                type="password" 
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-brand-blue/20 dark:focus:border-sky-500/30 rounded-2xl py-3.5 pl-12 pr-4 outline-none transition-all font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                                placeholder="••••••••"
-                                required
-                            />
-                        </div>
-                        {view === 'login' && (
-                            <div className="flex justify-end mt-2">
-                                <a href="#" className="text-xs font-bold text-brand-blue/80 dark:text-sky-400/80 hover:text-brand-blue dark:hover:text-sky-400 transition-colors">¿Olvidaste tu clave?</a>
+                    {/* Hide Password Field in Forgot Password View */}
+                    {view !== 'forgot_password' && (
+                        <div>
+                            <label className="block text-xs font-extrabold text-slate-400 dark:text-slate-500 mb-1.5 ml-1 uppercase tracking-wider">Contraseña</label>
+                            <div className="relative group">
+                                <span className="material-symbols-outlined absolute left-4 top-3.5 text-slate-300 dark:text-slate-600 group-focus-within:text-brand-blue dark:group-focus-within:text-sky-400 transition-colors text-xl">lock</span>
+                                <input 
+                                    type="password" 
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-brand-blue/20 dark:focus:border-sky-500/30 rounded-2xl py-3.5 pl-12 pr-4 outline-none transition-all font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                    placeholder="••••••••"
+                                    required={view !== 'forgot_password'}
+                                />
                             </div>
-                        )}
-                    </div>
+                            {view === 'login' && (
+                                <div className="flex justify-end mt-2">
+                                    <button 
+                                        type="button"
+                                        onClick={() => switchView('forgot_password')}
+                                        className="text-xs font-bold text-brand-blue/80 dark:text-sky-400/80 hover:text-brand-blue dark:hover:text-sky-400 transition-colors"
+                                    >
+                                        ¿Olvidaste tu clave?
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="pt-2">
                         <button type="submit" className="w-full bg-gradient-to-r from-brand-blue to-[#084b85] dark:from-sky-600 dark:to-brand-blue text-white font-bold py-4 rounded-2xl shadow-lg shadow-brand-blue/30 dark:shadow-sky-900/30 active:scale-[0.98] transition-all hover:shadow-brand-blue/40 flex items-center justify-center gap-3 group">
-                            <span>{view === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</span>
-                            <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                            <span>
+                                {view === 'login' ? 'Iniciar Sesión' : view === 'register' ? 'Crear Cuenta' : 'Enviar Enlace'}
+                            </span>
+                            <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">
+                                {view === 'forgot_password' ? 'send' : 'arrow_forward'}
+                            </span>
                         </button>
+                        
+                        {/* Cancel Button for Forgot Password */}
+                        {view === 'forgot_password' && (
+                            <button 
+                                type="button"
+                                onClick={() => switchView('login')}
+                                className="w-full mt-3 py-3 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                        )}
                     </div>
                 </form>
 
+                {/* Biometric Section (Hidden on Desktop 'md:hidden') */}
                 {view === 'login' && (
-                <div className="mt-8">
+                <div className="mt-8 md:hidden">
                     <div className="relative flex py-2 items-center mb-4">
                         <div className="flex-grow border-t border-slate-100 dark:border-slate-700"></div>
                         <span className="flex-shrink-0 mx-4 text-slate-300 dark:text-slate-600 text-[10px] font-extrabold uppercase tracking-widest">Métodos Alternativos</span>

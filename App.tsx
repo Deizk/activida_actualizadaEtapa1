@@ -18,8 +18,9 @@ import { ImpactView } from './views/ImpactView';
 import { VolunteerTasks } from './views/VolunteerTasks';
 import { UserProfile } from './views/UserProfile';
 import { CensusView } from './views/CensusView';
+import { MinorProfilesView } from './views/MinorProfilesView'; // Import New View
 import { ThemeProvider } from './ThemeContext';
-import { CartItem, Product, VoteRecord, Proposal } from './types';
+import { CartItem, Product, VoteRecord, Proposal, UserProfileData } from './types';
 import { MOCK_VOTE_HISTORY } from './constants';
 
 function AppContent() {
@@ -27,6 +28,10 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('home');
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
   
+  // Navigation History for Profile Views
+  const [previousTab, setPreviousTab] = useState('home');
+  const [selectedPublicProfile, setSelectedPublicProfile] = useState<UserProfileData | null>(null);
+
   // Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
   
@@ -47,6 +52,13 @@ function AppContent() {
 
   const handleLogin = () => {
     setIsAuthenticated(true);
+  };
+
+  // Profile Navigation
+  const handleViewProfile = (profile: UserProfileData) => {
+      setPreviousTab(activeTab);
+      setSelectedPublicProfile(profile);
+      setActiveTab('public_profile');
   };
 
   // Cart Functions
@@ -119,7 +131,7 @@ function AppContent() {
 
       // Mercado
       case 'market_home':
-        return <Marketplace onAddToCart={addToCart} />;
+        return <Marketplace onAddToCart={addToCart} onViewProfile={handleViewProfile} />;
       case 'cart':
         return <CartView 
             items={cart} 
@@ -138,13 +150,17 @@ function AppContent() {
 
       // Voluntariado
       case 'tasks':
-        return <VolunteerTasks />;
+        return <VolunteerTasks onViewProfile={handleViewProfile} />;
 
       // Usuario
       case 'profile':
         return <UserProfile />;
+      case 'minors': // New Route
+        return <MinorProfilesView />;
+      case 'public_profile':
+        return <UserProfile user={selectedPublicProfile} onBack={() => setActiveTab(previousTab)} />;
       case 'census':
-        return <CensusView />;
+        return <CensusView onViewProfile={handleViewProfile} />;
       case 'settings':
         return <Settings />;
       

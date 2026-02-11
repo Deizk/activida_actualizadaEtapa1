@@ -64,6 +64,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       title: 'Usuario',
       items: [
         { id: 'profile', icon: 'person', label: 'Perfil' },
+        { id: 'minors', icon: 'child_care', label: 'Menores a Cargo' },
         { id: 'census', icon: 'badge', label: 'Censo' },
         { id: 'settings', icon: 'settings', label: 'Ajustes' },
         { id: 'logout', icon: 'logout', label: 'Salir', danger: true },
