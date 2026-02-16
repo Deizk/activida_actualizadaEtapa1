@@ -1,23 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { MOCK_USER_PROFILE } from '../constants';
-import { UserProfileData } from '../types';
+import { UserProfileData, MinorProfile } from '../types';
 
 interface UserProfileProps {
   user?: UserProfileData | null;
+  minors?: MinorProfile[]; // Add minors prop
   onBack?: () => void;
 }
 
-export const UserProfile: React.FC<UserProfileProps> = ({ user, onBack }) => {
+export const UserProfile: React.FC<UserProfileProps> = ({ user, minors = [], onBack }) => {
   // Determine if we are viewing our own profile or someone else's
   const isOwnProfile = !user;
   
   // Local state to manage profile data (simulating DB updates)
   const [localProfile, setLocalProfile] = useState<UserProfileData>(user || MOCK_USER_PROFILE);
   
+  // State for Medical Card View Selection (Me vs Minor)
+  const [selectedMedicalId, setSelectedMedicalId] = useState<string>('me');
+  const [medicalDisplayData, setMedicalDisplayData] = useState(MOCK_USER_PROFILE.medicalSummary);
+  
   // Update local state if prop changes (for public profile viewing)
   useEffect(() => {
     if (user) setLocalProfile(user);
   }, [user]);
+
+  // Update Medical Data Display based on selection
+  useEffect(() => {
+      if (selectedMedicalId === 'me') {
+          setMedicalDisplayData(localProfile.medicalSummary);
+      } else {
+          const minor = minors.find(m => m.id === selectedMedicalId);
+          if (minor) {
+              setMedicalDisplayData({
+                  bloodType: minor.bloodType,
+                  height: minor.height || 0,
+                  weight: minor.weight || 0,
+                  allergies: minor.allergies,
+                  chronicConditions: minor.conditions,
+                  mobilityIssue: minor.disability,
+                  medications: [], 
+                  surgeries: [], 
+                  familyHistory: [], 
+                  insurance: "N/A"
+              });
+          }
+      }
+  }, [selectedMedicalId, minors, localProfile]);
 
   // Form States
   const [editMode, setEditMode] = useState<'general' | 'medical' | null>(null);
@@ -25,7 +53,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onBack }) => {
 
   // Handlers
   const handleEditOpen = (mode: 'general' | 'medical') => {
-    setFormData({ ...localProfile }); // Clone current data to form
+    // Only allow editing own profile ('me') for now in this view
+    if (selectedMedicalId !== 'me' && mode === 'medical') {
+        alert("Para editar los datos de un menor, ve a la sección 'Menores a Cargo'.");
+        return;
+    }
+    setFormData({ ...localProfile }); 
     setEditMode(mode);
   };
 
@@ -33,7 +66,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onBack }) => {
     e.preventDefault();
     setLocalProfile(formData);
     setEditMode(null);
-    // Here you would typically trigger an API call
     alert("Datos actualizados correctamente.");
   };
 
@@ -367,30 +399,46 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onBack }) => {
             </section>
         </div>
 
-        {/* Right Column: Medical Summary (Only visible for Own Profile) */}
+        {/* Right Column: Medical Summary */}
         <div className="lg:col-span-1">
-             <section className={`bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 h-full ${!isOwnProfile ? 'opacity-60 grayscale' : ''}`}>
+             <section className={`bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col`}>
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
                         <span className="material-symbols-outlined text-rose-500">medical_services</span>
                         Ficha Médica
                     </h3>
-                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-500 dark:text-slate-400">
-                        {isOwnProfile ? 'Privado' : 'Protegido'}
-                    </span>
+                    
+                    {/* View Switcher only for Own Profile */}
+                    {isOwnProfile && minors.length > 0 ? (
+                        <div className="relative">
+                            <select 
+                                value={selectedMedicalId} 
+                                onChange={(e) => setSelectedMedicalId(e.target.value)}
+                                className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold py-1 pl-2 pr-6 rounded-lg outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors appearance-none"
+                            >
+                                <option value="me">Yo</option>
+                                {minors.map(m => <option key={m.id} value={m.id}>{m.name.split(' ')[0]}</option>)}
+                            </select>
+                            <span className="material-symbols-outlined absolute right-1 top-1 text-sm pointer-events-none text-slate-500">expand_more</span>
+                        </div>
+                    ) : (
+                        <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-500 dark:text-slate-400">
+                            {isOwnProfile ? 'Privado' : 'Vista Pública'}
+                        </span>
+                    )}
                 </div>
                 
                 {isOwnProfile ? (
                     <div className="space-y-4">
                         <div className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-slate-700/50">
                             <span className="text-sm text-slate-500 dark:text-slate-400">Tipo de Sangre</span>
-                            <span className="font-bold text-slate-800 dark:text-white bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded">{localProfile.medicalSummary.bloodType}</span>
+                            <span className="font-bold text-slate-800 dark:text-white bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded">{medicalDisplayData.bloodType || '?'}</span>
                         </div>
                         
                         <div>
                             <span className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold block mb-2">Alergias</span>
                             <div className="flex flex-wrap gap-2">
-                                {localProfile.medicalSummary.allergies.length > 0 ? localProfile.medicalSummary.allergies.map(a => (
+                                {medicalDisplayData.allergies.length > 0 ? medicalDisplayData.allergies.map(a => (
                                     <span key={a} className="text-xs bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-2 py-1 rounded border border-orange-100 dark:border-orange-800/30">
                                         {a}
                                     </span>
@@ -401,7 +449,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onBack }) => {
                         <div>
                             <span className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold block mb-2">Condiciones Crónicas</span>
                             <div className="flex flex-wrap gap-2">
-                                {localProfile.medicalSummary.chronicConditions.length > 0 ? localProfile.medicalSummary.chronicConditions.map(c => (
+                                {medicalDisplayData.chronicConditions.length > 0 ? medicalDisplayData.chronicConditions.map(c => (
                                     <span key={c} className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded border border-blue-100 dark:border-blue-800/30">
                                         {c}
                                     </span>
@@ -409,6 +457,52 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onBack }) => {
                             </div>
                         </div>
                         
+                        {medicalDisplayData.mobilityIssue && (
+                            <div className="mt-2 bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded-lg border border-yellow-100 dark:border-yellow-800/30 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400">accessible</span>
+                                <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">Movilidad Reducida</span>
+                            </div>
+                        )}
+
+                        <div className="pt-4 mt-auto border-t border-gray-100 dark:border-slate-700">
+                             {selectedMedicalId === 'me' ? (
+                                 <button 
+                                    onClick={() => handleEditOpen('medical')}
+                                    className="w-full py-2 border border-dashed border-gray-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                                 >
+                                    <span className="material-symbols-outlined text-base">edit_note</span>
+                                    Actualizar Mis Datos
+                                 </button>
+                             ) : (
+                                 <p className="text-xs text-center text-slate-400 italic">
+                                     Datos de menor a cargo. Para editar, visita la sección de gestión familiar.
+                                 </p>
+                             )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {/* Blood Type - Often public for emergency/community knowledge */}
+                        <div className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-slate-700/50">
+                            <span className="text-sm text-slate-500 dark:text-slate-400">Tipo de Sangre</span>
+                            <span className="font-bold text-slate-800 dark:text-white bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded">
+                                {localProfile.medicalSummary.bloodType || '?'}
+                            </span>
+                        </div>
+
+                        {/* Allergies - Public as requested */}
+                        <div>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold block mb-2">Alergias (Alerta)</span>
+                            <div className="flex flex-wrap gap-2">
+                                {localProfile.medicalSummary.allergies.length > 0 ? localProfile.medicalSummary.allergies.map(a => (
+                                    <span key={a} className="text-xs bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-2 py-1 rounded border border-orange-100 dark:border-orange-800/30">
+                                        {a}
+                                    </span>
+                                )) : <span className="text-sm text-slate-400">Ninguna conocida</span>}
+                            </div>
+                        </div>
+
+                        {/* Mobility - Useful for community help */}
                         {localProfile.medicalSummary.mobilityIssue && (
                             <div className="mt-2 bg-yellow-50 dark:bg-yellow-900/10 p-2 rounded-lg border border-yellow-100 dark:border-yellow-800/30 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400">accessible</span>
@@ -416,20 +510,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onBack }) => {
                             </div>
                         )}
 
-                        <div className="pt-4 mt-4 border-t border-gray-100 dark:border-slate-700">
-                             <button 
-                                onClick={() => handleEditOpen('medical')}
-                                className="w-full py-2 border border-dashed border-gray-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-                             >
-                                <span className="material-symbols-outlined text-base">edit_note</span>
-                                Actualizar Datos Médicos
-                             </button>
+                        {/* Hidden Sections Placeholder */}
+                        <div className="mt-4 p-3 bg-gray-50 dark:bg-slate-700/30 rounded-xl border border-gray-100 dark:border-slate-700 flex items-center gap-3">
+                            <span className="material-symbols-outlined text-slate-400">lock</span>
+                            <div className="flex-1">
+                                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Historial Detallado</p>
+                                <p className="text-[10px] text-slate-500">Condiciones crónicas y medicación restringidas por privacidad.</p>
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-48 text-center text-slate-400">
-                        <span className="material-symbols-outlined text-4xl mb-2 opacity-50">lock</span>
-                        <p className="text-xs">Esta información es privada y solo visible para el usuario propietario.</p>
                     </div>
                 )}
              </section>

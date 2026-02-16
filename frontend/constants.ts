@@ -1,5 +1,5 @@
 
-import { BulletinItem, HighlightItem, Incident, IncidentPriority, IncidentStatus, KPI, Product, Proposal, ServiceStatusItem, Store, VoteRecord, VolunteerTask, UserProfileData, CensusData, AppNotification, MinorProfile } from "./types";
+import { BulletinItem, HighlightItem, Incident, IncidentPriority, IncidentStatus, KPI, Product, Proposal, ServiceStatusItem, Store, VoteRecord, VolunteerTask, UserProfileData, CensusData, AppNotification, MinorProfile, UserRole } from "./types";
 
 export const MOCK_KPIS: KPI[] = [
   { label: "Hogares Conectados", value: "85%", change: "+2%", trend: "up" },
@@ -122,7 +122,18 @@ export const MOCK_STORES: Store[] = [
       skills: ["Apicultura", "Gestión Cooperativa", "Botánica"],
       bio: "Apicultora con más de 15 años de experiencia. Fundadora de la Cooperativa La Abeja, dedicada a la producción de miel orgánica y derivados naturales. Defensora del medio ambiente.",
       communityReputation: 98,
-      medicalSummary: { bloodType: "A+", allergies: [], chronicConditions: [], mobilityIssue: false }
+      role: UserRole.LEADER,
+      medicalSummary: { 
+          bloodType: "A+", 
+          height: 165,
+          weight: 68,
+          allergies: [], 
+          chronicConditions: [], 
+          mobilityIssue: false,
+          medications: [],
+          surgeries: [],
+          familyHistory: []
+      }
     }
   },
   { 
@@ -146,7 +157,18 @@ export const MOCK_STORES: Store[] = [
       skills: ["Reparación Móviles", "Redes", "Soldadura Microelectrónica"],
       bio: "Joven emprendedor apasionado por la tecnología. Ofrezco servicio técnico garantizado y asesoría en compra de equipos. Colaborador en la digitalización de la escuela local.",
       communityReputation: 89,
-      medicalSummary: { bloodType: "O-", allergies: ["Polvo"], chronicConditions: [], mobilityIssue: false }
+      role: UserRole.CITIZEN,
+      medicalSummary: { 
+          bloodType: "O-", 
+          height: 175,
+          weight: 75,
+          allergies: ["Polvo"], 
+          chronicConditions: [], 
+          mobilityIssue: false,
+          medications: [],
+          surgeries: [],
+          familyHistory: []
+      }
     }
   },
   { 
@@ -170,7 +192,18 @@ export const MOCK_STORES: Store[] = [
       skills: ["Panadería", "Contabilidad Básica", "Gestión de Personal"],
       bio: "Encargado de la Panadería Comunal bajo supervisión del Comité de Economía. Nuestro objetivo es garantizar el pan diario a precio justo para todos los vecinos.",
       communityReputation: 99,
-      medicalSummary: { bloodType: "B+", allergies: [], chronicConditions: ["Diabetes"], mobilityIssue: false }
+      role: UserRole.LEADER,
+      medicalSummary: { 
+          bloodType: "B+", 
+          height: 170,
+          weight: 80,
+          allergies: [], 
+          chronicConditions: ["Diabetes"], 
+          mobilityIssue: false,
+          medications: [],
+          surgeries: [],
+          familyHistory: []
+      }
     }
   },
 ];
@@ -324,11 +357,23 @@ export const MOCK_USER_PROFILE: UserProfileData = {
   skills: ["Gestión Educativa", "Repostería", "Liderazgo Comunitario", "Organización de Eventos"],
   bio: "Educadora con 10 años de experiencia, actualmente dedicada al emprendimiento de repostería local y activa en la organización de eventos culturales para niños.",
   communityReputation: 95,
+  role: UserRole.ADMIN, // Set as ADMIN to demonstrate floating panel
   medicalSummary: {
     bloodType: "O+",
-    allergies: ["Penicilina"],
+    height: 162,
+    weight: 65,
+    allergies: ["Penicilina", "Polvo"],
     chronicConditions: ["Hipertensión Leve"],
-    mobilityIssue: false
+    mobilityIssue: false,
+    medications: [
+      { name: "Losartán Potásico", dosage: "50mg", frequency: "1 diaria (mañana)" }
+    ],
+    surgeries: [
+      { procedure: "Apendicectomía", year: "2015" },
+      { procedure: "Cesárea", year: "2018" }
+    ],
+    familyHistory: ["Madre diabética", "Padre hipertenso"],
+    insurance: "IVSS"
   }
 };
 

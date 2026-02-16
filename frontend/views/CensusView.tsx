@@ -1,20 +1,40 @@
 import React from 'react';
 import { MOCK_CENSUS_DATA } from '../constants';
-import { UserProfileData, FamilyMember } from '../types';
+import { UserProfileData, FamilyMember, UserRole, MinorProfile } from '../types';
 
 interface CensusViewProps {
   onViewProfile?: (profile: UserProfileData) => void;
+  minors?: MinorProfile[];
 }
 
-export const CensusView: React.FC<CensusViewProps> = ({ onViewProfile }) => {
+export const CensusView: React.FC<CensusViewProps> = ({ onViewProfile, minors = [] }) => {
   const data = MOCK_CENSUS_DATA;
+
+  // Merge static census members with dynamic minors
+  // Avoid duplicates if mocked names clash (simple check by name)
+  const mergedMembers: FamilyMember[] = [...data.members];
+  
+  minors.forEach(minor => {
+      // Check if minor already exists in census (by name match for mock simplicity)
+      if (!mergedMembers.some(m => m.name === minor.name)) {
+          mergedMembers.push({
+              id: minor.id,
+              name: minor.name,
+              relation: 'Hijo/a', // Assuming minor profile is child
+              age: minor.age,
+              occupation: 'Estudiante',
+              condition: minor.disability ? 'Discapacidad' : minor.conditions.length > 0 ? 'Enfermedad Crónica' : 'Ninguna',
+              cedula: minor.cedula
+          });
+      }
+  });
 
   // Helper to count demographics
   const stats = {
-    total: data.members.length,
-    minors: data.members.filter(m => m.age < 18).length,
-    elderly: data.members.filter(m => m.age >= 60).length,
-    vulnerable: data.members.filter(m => m.condition !== 'Ninguna').length
+    total: mergedMembers.length,
+    minors: mergedMembers.filter(m => m.age < 18).length,
+    elderly: mergedMembers.filter(m => m.age >= 60).length,
+    vulnerable: mergedMembers.filter(m => m.condition !== 'Ninguna').length
   };
 
   const handleMemberClick = (member: FamilyMember) => {
@@ -31,11 +51,17 @@ export const CensusView: React.FC<CensusViewProps> = ({ onViewProfile }) => {
             skills: ["Vecino/a", "Participación Familiar"],
             bio: `Residente de la comunidad. Parentesco registrado: ${member.relation}.`,
             communityReputation: 50, // Default neutral reputation for family members
+            role: UserRole.CITIZEN,
             medicalSummary: { 
                 bloodType: "?", 
                 allergies: [], 
                 chronicConditions: member.condition && member.condition !== 'Ninguna' ? [member.condition] : [], 
-                mobilityIssue: member.condition === 'Cama' || member.condition === 'Discapacidad'
+                mobilityIssue: member.condition === 'Cama' || member.condition === 'Discapacidad',
+                height: 0,
+                weight: 0,
+                medications: [],
+                surgeries: [],
+                familyHistory: []
             }
         };
         onViewProfile(fullProfile);
@@ -116,7 +142,7 @@ export const CensusView: React.FC<CensusViewProps> = ({ onViewProfile }) => {
              </div>
 
              <div className="space-y-3">
-                {data.members.map(member => (
+                {mergedMembers.map(member => (
                     <div 
                         key={member.id} 
                         onClick={() => handleMemberClick(member)}

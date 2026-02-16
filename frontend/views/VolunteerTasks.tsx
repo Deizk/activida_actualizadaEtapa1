@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MOCK_VOLUNTEER_TASKS } from '../constants';
-import { UserProfileData } from '../types';
+import { UserProfileData, UserRole } from '../types';
 
 interface VolunteerTasksProps {
     onViewProfile?: (profile: UserProfileData) => void;
@@ -36,7 +36,18 @@ export const VolunteerTasks: React.FC<VolunteerTasksProps> = ({ onViewProfile })
               skills: ["Liderazgo", "Organización", "Trabajo en Equipo"],
               bio: `Líder comunitario activo en ${leader.role}. Coordinando actividades de voluntariado para el bienestar de todos.`,
               communityReputation: leader.reputation,
-              medicalSummary: { bloodType: "?", allergies: [], chronicConditions: [], mobilityIssue: false }
+              role: UserRole.LEADER,
+              medicalSummary: { 
+                  bloodType: "?", 
+                  allergies: [], 
+                  chronicConditions: [], 
+                  mobilityIssue: false,
+                  height: 0,
+                  weight: 0,
+                  medications: [],
+                  surgeries: [],
+                  familyHistory: []
+              }
           };
           onViewProfile(fullProfile);
       }

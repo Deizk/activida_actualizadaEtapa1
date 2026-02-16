@@ -79,11 +79,18 @@ export interface UserProfileData {
   skills: string[];
   bio: string; // Resumen curricular breve
   communityReputation: number; // 1-100
+  role: UserRole; // Added Role for permissions
   medicalSummary: {
     bloodType: string;
+    height: number; // cm
+    weight: number; // kg
     allergies: string[];
     chronicConditions: string[]; // Non-invasive list
     mobilityIssue: boolean;
+    medications: { name: string; dosage: string; frequency: string }[];
+    surgeries: { procedure: string; year: string }[];
+    familyHistory: string[]; // e.g. "Diabetes (Father)"
+    insurance?: string; // e.g. "IVSS / Seguros Caracas"
   };
 }
 
@@ -227,6 +234,8 @@ export interface MinorProfile {
   phone?: string; // New field
   gender: 'M' | 'F';
   bloodType: string;
+  weight?: number; // kg
+  height?: number; // cm
   allergies: string[];
   conditions: string[];
   disability: boolean;

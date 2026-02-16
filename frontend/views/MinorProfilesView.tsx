@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { MOCK_MINORS, MOCK_USER_PROFILE } from '../constants';
+import { MOCK_USER_PROFILE } from '../constants';
 import { MinorProfile } from '../types';
 
 interface MinorProfilesViewProps {
   onEmergency?: (minor: MinorProfile) => void;
+  minors: MinorProfile[];
+  setMinors: React.Dispatch<React.SetStateAction<MinorProfile[]>>;
 }
 
-export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergency }) => {
-  const [minors, setMinors] = useState<MinorProfile[]>(MOCK_MINORS);
+export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergency, minors, setMinors }) => {
   const [showForm, setShowForm] = useState(false);
   
   // Editing State
@@ -19,6 +20,8 @@ export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergenc
   const [newCedula, setNewCedula] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [hasCertificate, setHasCertificate] = useState(false);
+  const [newWeight, setNewWeight] = useState('');
+  const [newHeight, setNewHeight] = useState('');
   
   // Medical State in Form
   const [hasCondition, setHasCondition] = useState(false);
@@ -36,6 +39,8 @@ export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergenc
     setConditionInput('');
     setConditionsList([]);
     setIsDisability(false);
+    setNewWeight('');
+    setNewHeight('');
     setEditingId(null);
   };
 
@@ -50,6 +55,8 @@ export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergenc
       setNewDob(minor.dateOfBirth);
       setNewCedula(minor.cedula || '');
       setNewPhone(minor.phone || '');
+      setNewWeight(minor.weight ? minor.weight.toString() : '');
+      setNewHeight(minor.height ? minor.height.toString() : '');
       // Mock check for certificate if editing (assuming existing are verified)
       setHasCertificate(minor.birthCertificateVerified);
       
@@ -104,6 +111,8 @@ export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergenc
         phone: newPhone,
         gender: "F", // Default for mock
         bloodType: "O+",
+        weight: newWeight ? parseFloat(newWeight) : undefined,
+        height: newHeight ? parseFloat(newHeight) : undefined,
         allergies: [],
         conditions: finalConditions,
         disability: isDisability,
@@ -122,7 +131,7 @@ export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergenc
         alert("Perfil actualizado correctamente.");
     } else {
         // Create new
-        setMinors([...minors, profileData]);
+        setMinors(prev => [...prev, profileData]);
         if (finalConditions.length > 0) {
             alert(`✅ Sincronización Exitosa\n\nLas condiciones médicas han sido vinculadas al Historial Médico Familiar Centralizado.`);
         }
@@ -234,6 +243,25 @@ export const MinorProfilesView: React.FC<MinorProfilesViewProps> = ({ onEmergenc
                                     required
                                 />
                                 <p className="text-[10px] text-slate-400 mt-1">Si no posee, usar teléfono del representante.</p>
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Peso (kg)</label>
+                                <input 
+                                    type="number" 
+                                    value={newWeight}
+                                    onChange={e => setNewWeight(e.target.value)}
+                                    className="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none text-slate-800 dark:text-white"
+                                />
+                            </div>
+                            <div className="col-span-1">
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Altura (cm)</label>
+                                <input 
+                                    type="number" 
+                                    value={newHeight}
+                                    onChange={e => setNewHeight(e.target.value)}
+                                    className="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none text-slate-800 dark:text-white"
+                                />
                             </div>
                         </div>
 

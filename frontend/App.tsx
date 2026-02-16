@@ -5,7 +5,7 @@ import { ReportForm } from './views/ReportForm';
 import { Voting } from './views/Voting';
 import { VotingHistory } from './views/VotingHistory';
 import { Marketplace } from './views/Marketplace';
-import { MyBusiness } from './views/MyBusiness'; // New Import
+import { MyBusiness } from './views/MyBusiness'; 
 import { P2PCheckout } from './views/P2PCheckout';
 import { WebDashboard } from './views/WebDashboard';
 import { Auth } from './views/Auth';
@@ -19,9 +19,10 @@ import { VolunteerTasks } from './views/VolunteerTasks';
 import { UserProfile } from './views/UserProfile';
 import { CensusView } from './views/CensusView';
 import { MinorProfilesView } from './views/MinorProfilesView';
+// AdminMaintenance is now integrated into Layout
 import { ThemeProvider } from './ThemeContext';
 import { CartItem, Product, VoteRecord, Proposal, UserProfileData, MinorProfile } from './types';
-import { MOCK_VOTE_HISTORY, MOCK_PROPOSALS } from './constants';
+import { MOCK_VOTE_HISTORY, MOCK_PROPOSALS, MOCK_USER_PROFILE, MOCK_MINORS } from './constants';
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,6 +40,9 @@ function AppContent() {
   const [proposals, setProposals] = useState<Proposal[]>(MOCK_PROPOSALS);
   const [userVotes, setUserVotes] = useState<Record<string, 'for' | 'against'>>({});
   const [voteHistory, setVoteHistory] = useState<VoteRecord[]>(MOCK_VOTE_HISTORY);
+
+  // Minor Profiles State (Lifted for global access)
+  const [minors, setMinors] = useState<MinorProfile[]>(MOCK_MINORS);
 
   // Emergency State
   const [emergencyMinor, setEmergencyMinor] = useState<MinorProfile | null>(null);
@@ -138,7 +142,7 @@ function AppContent() {
     switch (activeTab) {
       // Principal
       case 'home':
-        return <MobileHome />;
+        return <MobileHome onNavigate={setActiveTab} />;
       
       // Incidencias & IA
       case 'ai_decision':
@@ -150,7 +154,7 @@ function AppContent() {
 
       // Bienestar Social
       case 'health':
-        return <HealthView />;
+        return <HealthView minors={minors} />;
 
       // Gobernanza
       case 'dashboard':
@@ -191,13 +195,13 @@ function AppContent() {
 
       // Usuario
       case 'profile':
-        return <UserProfile />;
-      case 'minors': // New Route
-        return <MinorProfilesView onEmergency={handleTriggerEmergency} />;
+        return <UserProfile minors={minors} />;
+      case 'minors': 
+        return <MinorProfilesView minors={minors} setMinors={setMinors} onEmergency={handleTriggerEmergency} />;
       case 'public_profile':
         return <UserProfile user={selectedPublicProfile} onBack={() => setActiveTab(previousTab)} />;
       case 'census':
-        return <CensusView onViewProfile={handleViewProfile} />;
+        return <CensusView onViewProfile={handleViewProfile} minors={minors} />;
       case 'settings':
         return <Settings />;
       
@@ -207,7 +211,7 @@ function AppContent() {
         return null;
 
       default:
-        return <MobileHome />;
+        return <MobileHome onNavigate={setActiveTab} />;
     }
   };
 
@@ -219,7 +223,7 @@ function AppContent() {
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} cartItemCount={cartCount}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} cartItemCount={cartCount} user={MOCK_USER_PROFILE}>
       {renderContent()}
     </Layout>
   );
