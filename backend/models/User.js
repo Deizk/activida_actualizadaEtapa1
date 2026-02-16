@@ -21,6 +21,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    role: {
+        type: String,
+        enum: ['natural', 'gobierno', 'admin', 'mantenimiento'],
+        default: 'natural'
+    },
     createdAt: {
         type: Date,
         default: Date.now

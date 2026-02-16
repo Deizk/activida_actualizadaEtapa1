@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { ROLES, ROLE_PERMISSIONS } = require('../config/roles');
 
 // Real API function
 const axios = require('axios');
@@ -112,17 +113,28 @@ exports.register = async (req, res) => {
 
         const payload = {
             user: {
-                id: user.id
+                id: user.id,
+                role: user.role
             }
         };
 
         jwt.sign(
             payload,
-            process.env.JWT_SECRET || 'secret', // TODO: Move to env
+            process.env.JWT_SECRET || 'secret',
             { expiresIn: 360000 },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, surname: user.surname, cedula: user.cedula } });
+                res.json({
+                    token,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        surname: user.surname,
+                        cedula: user.cedula,
+                        role: user.role,
+                        permissions: ROLE_PERMISSIONS[user.role]
+                    }
+                });
             }
         );
 
@@ -150,7 +162,8 @@ exports.login = async (req, res) => {
 
         const payload = {
             user: {
-                id: user.id
+                id: user.id,
+                role: user.role
             }
         };
 
@@ -160,7 +173,17 @@ exports.login = async (req, res) => {
             { expiresIn: 360000 },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, surname: user.surname, cedula: user.cedula } });
+                res.json({
+                    token,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        surname: user.surname,
+                        cedula: user.cedula,
+                        role: user.role,
+                        permissions: ROLE_PERMISSIONS[user.role]
+                    }
+                });
             }
         );
 
